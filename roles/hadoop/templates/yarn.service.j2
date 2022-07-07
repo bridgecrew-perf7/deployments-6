@@ -1,0 +1,18 @@
+[Unit]
+# YARN resourcemanager and nodemanagers
+Description={{ program }}
+
+[Service]
+Type=forking
+User={{hadoop_user}}
+Group={{hadoop_group}}
+Type=simple
+Restart=on-failure
+TimeoutStartSec=2min
+TimeoutSec=300
+ExecStart={{ hadoop_bin_dir }}/yarn --daemon start {{ program }}
+ExecStop={{ hadoop_bin_dir }}/yarn --daemon stop {{ program }}
+PIDFile=/tmp/hadoop-hdfs-{{program}}.pid
+
+[Install]
+WantedBy=multi-user.target

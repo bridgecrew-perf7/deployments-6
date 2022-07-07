@@ -1,0 +1,24 @@
+---
+- hosts: servers
+  become: yes
+  strategy: linear
+  roles:
+    - {role: prometheus, tags: prometheus}
+    # - {role: alertmanager, tags: alertmanager}
+    # - {role: pushgateway, tags: pushgateway}
+
+# - hosts: endpoints
+#   become: yes
+#   serial: 8
+#   strategy: linear
+#   roles:
+#     # - {role: common, tags: common}
+#     - {role: node-exporter, tags: node-exporter}
+#     - {role: kafka-exporter, tags: kafka-exporter}
+#     - {role: phpfpm-exporter, tags: phpfpm-exporter}
+#     - {role: gpu-exporter, tags: gpu-exporter}
+#     - {role: smokeping-exporter, tags: smokeping-exporter}
+#     - {role: redis-exporter, tags: redis-exporter}
+#     - {role: pgbouncer-exporter, tags: pgbouncer-exporter}
+#     - {role: elasticsearch-exporter, tags: elasticsearch-exporter}
+#   #  - {role: prometheus, tags: prometheus}

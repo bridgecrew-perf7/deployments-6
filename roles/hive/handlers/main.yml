@@ -1,0 +1,25 @@
+- name: Start hive-metastore
+  service:
+    name: hive-metastore
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: Restart hive-metastore
+  service:
+    name: hive-metastore
+    state: restarted
+    enabled: yes
+
+- name: Start hiveserver2
+  service:
+    name: hiveserver2
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: Restart hiveserver2
+  service:
+    name: hiveserver2
+    state: restarted
+    enabled: yes

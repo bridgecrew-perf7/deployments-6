@@ -1,0 +1,85 @@
+---
+#### only for ssh fence
+- name: Check if ssh keys should be distributed
+  stat:
+    path: "{{ hbase_ssh_known_hosts_file }}"
+  register: host_file_status
+
+- name: Set distribute keys variable
+  set_fact:
+    distribute_keys: "{{not host_file_status.stat.exists or hadoop_redistribute_ssh_keys or created_user.changed}}"
+
+- name: Fetch private key
+  fetch:
+    src: "{{ hbase_user_home }}/.ssh/id_rsa"
+    dest: rsa_key
+  when: inventory_hostname == groups['hbase_master_nodes'][0] and distribute_keys
+  check_mode: no
+
+- name: Fetch public key
+  fetch:
+    src: "{{ hbase_user_home }}/.ssh/id_rsa.pub"
+    dest: rsa_key
+  when: inventory_hostname == groups['hbase_master_nodes'][0] and distribute_keys
+  check_mode: no
+
+- name: Create .ssh directory for {{hbase_user}}
+  file:
+    path: "{{ hbase_user_home }}/.ssh"
+    state: directory
+    owner: "{{hbase_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0700
+  when: distribute_keys
+
+- name: Copy private key to all machines
+  copy:
+    src: "rsa_key/{{groups['hbase_master_nodes'][0]}}/{{ hbase_user_home }}/.ssh/id_rsa"
+    dest: "{{ hbase_user_home }}/.ssh/id_rsa"
+    owner: "{{hbase_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0600
+  when: distribute_keys
+
+- name: Add pubkeys to master server
+  authorized_key:
+    user: "{{hbase_user}}"
+    key: "{{ lookup('file', 'rsa_key/{{groups.hbase_master_nodes[0]}}/{{ hbase_user_home }}/.ssh/id_rsa.pub') }}"
+  when: distribute_keys
+
+- name: Make sure the known hosts file exists
+  file:
+    path: "{{ hbase_ssh_known_hosts_file }}"
+    state: touch
+    owner: "{{hbase_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0644
+  when: (not host_file_status.stat.exists) or (distribute_keys and host_file_status.stat.mode == "0644")
+  changed_when: (not host_file_status.stat.exists) or host_file_status.stat.mode != "0644"
+
+- set_fact: hbase_nodes_long={{ groups.hbase_nodes }}
+
+- name: Add long names to namenodes for proper key deployment
+  set_fact: hbase_nodes_long={{ hbase_nodes_long | map('regex_replace', '(.*)', '\\1.' + hadoop_host_domain_name ) | list}}
+  when: hbase_host_domain_name is defined
+
+- name: Check host name availability
+  shell: "ssh-keygen -f {{ hbase_ssh_known_hosts_file }} -F {{ item }}"
+  with_items: "{{ hbase_nodes_long }}"
+  when: distribute_keys
+  register: ssh_known_host_results
+  ignore_errors: yes
+  changed_when: False
+  tags:
+    - skip_ansible_lint
+
+- name: Scan the public key
+  shell: "ssh-keyscan -H -T 10 {{ item.item }} >> {{ hbase_ssh_known_hosts_file }}"
+  with_items: "{{ ssh_known_host_results.results }}"
+  when: item.stdout is defined and item.stdout == ""
+  no_log: True
+
+- name: Delete key locally
+  local_action: file path=rsa_key state=absent
+  when: inventory_hostname == groups['hbase_master_nodes'][0] and distribute_keys
+  become: no

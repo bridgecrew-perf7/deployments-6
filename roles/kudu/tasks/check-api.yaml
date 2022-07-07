@@ -1,0 +1,24 @@
+---
+- name: Check status of kudu-cluster
+  block:
+    - name: Check kudu-master status
+      wait_for:
+        port: "{{kudu_master_port}}"
+        delay: 5
+        state: started
+        timeout: 10
+        msg: "Timeout waiting for {{kudu_master_port}} to respond"
+      register: master_status
+      until: master_status.state == "started"
+      when: inventory_hostname in groups.kudu_master_nodes
+
+    - name: Check kudu-tserver status
+      wait_for:
+        port: "{{kudu_tserver_port}}"
+        delay: 5
+        state: started
+        timeout: 10
+        msg: "Timeout waiting for {{kudu_tserver_port}} to respond"
+      register: tserver_status
+      until: tserver_status.state == "started"
+      when: inventory_hostname in groups.kudu_tserver_nodes

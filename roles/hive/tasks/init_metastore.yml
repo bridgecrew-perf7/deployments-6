@@ -1,0 +1,4 @@
+---
+- name: Init metastore
+  shell: 'su {{hive_user}} -c "export HADOOP_HOME={{hadoop_install_dir}} && {{ hive_bin_dir }}/schematool -initSchema -dbType mysql"'
+  when: hive_metastore_init and inventory_hostname in hive_hosts[0]

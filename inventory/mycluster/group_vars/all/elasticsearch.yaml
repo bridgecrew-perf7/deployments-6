@@ -1,0 +1,51 @@
+# INSTALL COMPONENTS SETTING
+install_java_enabled: false
+install_elasticsearch_enabled: true
+install_kibana_enabled: true
+install_xpack_enabled: false
+
+# ES DEFAULT
+es_deb_url: "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-{{es_version}}-amd64.deb"
+es_user: elasticsearch
+es_group: elasticsearch
+es_start_service: true
+es_home_dir: "/usr/share/elasticsearch"
+es_bin_dir: "/usr/share/elasticsearch/bin"
+es_lib_dir: "/usr/share/elasticsearch/lib"
+es_conf_dir: "/etc/elasticsearch"
+es_conf_file: "/etc/elasticsearch/elasticsearch.yml"
+es_jvm_file: "/etc/elasticsearch/jvm.options"
+es_conf_env_dir: "/etc/default/elasticsearch"
+es_pid_dir: "/var/run/elasticsearch"
+es_tmp_dir: "/tmp"
+es_data_dirs: "{{datalandfill_data_dir}}/elasticsearch/data"
+es_log_dir: "/var/log/elasticsearch"
+es_plugins_dir: "/usr/share/elasticsearch/plugins"
+es_action_auto_create_index: "true"
+es_max_open_files: 65536
+es_max_map_count: 262144
+kb_logging_dest: "/var/log/kibana/kibana.log"
+
+
+es_ping_timeout: 1500
+es_request_timeout: 30000
+es_request_headers_whitelist: "[ authorization ]"
+es_custom_headers: "{}"
+es_shard_timeout: 30000
+es_log_queries: false
+
+# JVM CUSTOM PARAMETERS
+es_java_home: "{{datalandfill_java_home}}"
+es_jvm_custom_parameters: ''
+es_heap_size: "1g"
+es_heap_dump_path: "{{datalandfill_data_dir}}/elasticsearch"
+
+# ES CLUSTER CONFIGURATION
+es:
+  properties:
+    cluster.name: bigdata
+    path.data: "{{datalandfill_data_dir}}/elasticsearch/data"
+    path.logs: /var/log/elasticsearch
+    bootstrap.memory_lock: "false"
+    http.port: 9200
+    transport.tcp.port: 9300

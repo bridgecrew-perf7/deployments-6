@@ -1,0 +1,64 @@
+
+- name: Create Kafka Broker Config
+  template:
+    src: server.properties.j2
+    dest: "{{kafka.config_file}}"
+    mode: 0640
+    owner: "{{kafka_user}}"
+    group: "{{kafka_group}}"
+  notify: restart kafka
+
+- name: Create Logs Directory
+  file:
+    path: "{{kafka.appender_log_path}}"
+    state: directory
+    group: "{{kafka_group}}"
+    owner: "{{kafka_user}}"
+    mode: 0770
+
+- name: Create Kafka Broker log4j Config
+  template:
+    src: kafka_server_log4j.properties.j2
+    dest: "{{kafka.log4j_file}}"
+    mode: 0640
+    owner: "{{kafka_user}}"
+    group: "{{kafka_group}}"
+  notify: restart kafka
+
+- name: Create Kafka Environment File
+  template:
+    src: kafka.j2
+    dest: "{{kafka.kafka_env_file}}"
+    mode: 0644
+    owner: "{{kafka_user}}"
+    group: "{{kafka_group}}"
+  notify: restart kafka
+
+- name: Create Kafka Systemd File
+  template:
+    src: confluent-kafka.service.j2
+    dest: "{{kafka.systemd_file}}"
+    mode: 0644
+    owner: root
+    group: root
+  notify: restart kafka
+
+- name: Write Service Overrides
+  template:
+    src: override.conf.j2
+    dest: "{{ kafka.systemd_override }}"
+    mode: 0640
+    owner: "{{kafka_user}}"
+    group: "{{kafka_group}}"
+  notify: restart kafka
+
+- name: Kafka Started
+  systemd:
+    name: "{{kafka_service_name}}"
+    enabled: true
+    state: started
+
+- name: Wait for Under Replicated Partitions on Broker
+  include_tasks: health_check.yaml
+  when:
+    - health_checks_enabled|bool

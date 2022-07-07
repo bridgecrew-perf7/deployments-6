@@ -1,0 +1,50 @@
+---
+- name: Check elasticsearch-{{ es_version }}-amd64.deb Exists
+  stat:
+    path: "{{ es_tmp_dir }}/elasticsearch-{{ es_version }}-amd64.deb"
+  register: es_deb_exists
+  when:
+    - install_elasticsearch_enabled
+  tags: 
+    - elasticsearch
+
+- name: Download Elasticsearch {{ es_version }}
+  get_url:
+    url: "{{ es_deb_url }}"
+    dest: "{{ es_tmp_dir }}"
+    mode: 0644
+  when:
+    - install_elasticsearch_enabled
+    - not es_deb_exists.stat.exists
+  tags: 
+    - elasticsearch
+
+- name: Wait until the file "{{ es_tmp_dir }}/elasticsearch-{{ es_version }}-amd64.deb" is present before continuing
+  wait_for:
+    timeout: 60
+
+- name: Install Elasticsearch {{es_version}}
+  shell: dpkg -i {{ es_tmp_dir }}/elasticsearch-{{ es_version }}-amd64.deb
+  when:
+    - install_elasticsearch_enabled
+    - es_deb_exists.stat.exists is true
+  tags:
+    - elasticsearch
+
+- name: Create ElasticSearch Data Dir {{es_data_dirs}}
+  file:
+    path: "{{ es_data_dirs }}"
+    owner: "{{ es_user }}"
+    group: "{{ es_group }}"
+    state: directory
+    mode: "0775"
+    recurse: yes
+  tags:
+    - elasticsearch
+
+- name: Register Elasticsearch Service
+  service:
+    name: elasticsearch
+    enabled: yes
+  tags:
+    - elasticsearch

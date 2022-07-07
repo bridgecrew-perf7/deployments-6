@@ -1,0 +1,132 @@
+<?xml version="1.0"?>
+<configuration>
+        <!-- Turn on RM high availability-->
+        <property>
+            <name>yarn.resourcemanager.ha.enabled</name>
+            <value>true</value>
+        </property>
+
+        <!-- Specify the cluster id of RM -->
+        <property>
+            <name>yarn.resourcemanager.cluster-id</name>
+            <value>{{ hadoop_yarn_cluster_id }}</value>
+        </property>
+
+        <!-- Specify the logical name of RM-->
+        <property>
+            <name>yarn.resourcemanager.ha.rm-ids</name>
+            <value>{% for host in hadoop_resourcemanagers %}{% if loop.index > 1%},{% endif %}{{ hostvars[host]['rm_name'] }}{% endfor %}</value>
+        </property>
+			
+		{% for host in hadoop_resourcemanagers %}
+
+        <!-- Specify the address of {{ hostvars[host]['rm_name'] }} -->
+        <property>
+            <name>yarn.resourcemanager.hostname.{{ hostvars[host]['rm_name'] }}</name>
+            <value>{{ hostvars[host]['ansible_hostname'] }}</value>
+        </property>
+		{%- endfor -%}
+
+        <!-- It is very important, even if it is configured by default-->
+
+        {% for host in hadoop_resourcemanagers %}
+
+        <!-- {{ hostvars[host]['rm_name'] }} webapp address-->
+
+        <property>
+            <name>yarn.resourcemanager.address.{{ hostvars[host]['rm_name'] }}</name>
+            <value>{{ hostvars[host]['ansible_hostname'] }}:8032</value>
+        </property>
+        <property>
+            <name>yarn.resourcemanager.scheduler.address.{{ hostvars[host]['rm_name'] }}</name>
+            <value>{{ hostvars[host]['ansible_hostname'] }}:8030</value>
+        </property>
+        <property>
+            <name>yarn.resourcemanager.resource-tracker.address.{{ hostvars[host]['rm_name'] }}</name>
+            <value>{{ hostvars[host]['ansible_hostname'] }}:8031</value>
+        </property>
+        <property>
+            <name>yarn.resourcemanager.admin.address.{{ hostvars[host]['rm_name'] }}</name>
+            <value>{{ hostvars[host]['ansible_hostname'] }}:8033</value>
+        </property>
+        <property>
+            <name>yarn.resourcemanager.webapp.address.{{ hostvars[host]['rm_name'] }}</name>
+            <value>{{ hostvars[host]['ansible_hostname'] }}:8088</value>
+        </property>
+		{%- endfor -%}
+
+        {% if hadoop_ha_enabled %}
+        <!-- Specify the address of the zk cluster-->
+        <property>
+            <name>yarn.resourcemanager.zk-address</name>
+            <value>{{ hadoop_zookeeper_quorum }}</value>
+        </property>
+        {% endif %}
+
+        <!--Enable automatic recovery-->
+        <property>
+            <name>yarn.resourcemanager.recovery.enabled</name>
+            <value>true</value>
+        </property>
+
+        <!-- Enable automatic switching-->
+        <property>
+            <name>yarn.resourcemanager.ha.automatic-failover.enabled</name>
+            <value>true</value>
+        </property>
+
+        <property>
+            <name>yarn.resourcemanager.ha.automatic-failover.embedded</name>
+            <value>true</value>
+        </property>
+
+        <!-- Specify the status information of the resourcemanager to be stored in the zookeeper cluster -->
+        <property>
+            <name>yarn.resourcemanager.store.class</name>
+            <value>org.apache.hadoop.yarn.server.resourcemanager.recovery.ZKRMStateStore</value>
+        </property>
+
+        <!-- Auxiliary services running on NodeManager need to be configured as mapreduce_shuffle to run MapReduce programs -->
+
+        <property>
+            <name>yarn.nodemanager.webapp.address</name>
+            <value>{{ inventory_hostname }}:8042</value>
+        </property>
+
+        <property>
+            <name>yarn.nodemanager.webapp.https.address</name>
+            <value>{{ inventory_hostname }}:8044</value>
+        </property>
+
+        <property>
+            <name>yarn.nodemanager.address</name>
+            <value>{{ inventory_hostname }}:8041</value>
+        </property>
+
+        <property>
+            <name>yarn.nodemanager.localizer.address</name>
+            <value>{{ inventory_hostname }}:8040</value>
+        </property>
+
+        <!-- Let NodeManager automatically detect memory and CPU -->
+        <!--
+        <property>
+            <name>yarn.nodemanager.resource.detect-hardware-capabilities</name>
+            <value>true</value>
+        </property>
+        -->
+        <property>
+        <name>yarn.resourcemanager.nodes.exclude-path</name>
+        <value>{{ hadoop_conf_dir }}/dfs.hosts.exclude</value>
+    </property>
+
+
+    {% set dict = hadoop_yarn_site|combine(hadoop_yarn_site_defaults) %}
+    {% for key,value in dict.items() %}
+        <property>
+            <name>{{ key }}</name>
+            <value>{{ value }}</value>
+        </property>
+    {% endfor %}
+
+</configuration>

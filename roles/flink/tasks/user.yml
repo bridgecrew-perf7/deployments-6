@@ -1,0 +1,17 @@
+---
+- name: Create user on all machines
+  user:
+    name: "{{flink_user}}"
+    comment: "flink superuser"
+    group: "{{hadoop_group}}"
+    groups: sudo
+    home: "{{ flink_user_home }}"
+    createhome: yes
+    shell: /bin/bash
+  register: created_user
+
+- name: update ~/.bashrc
+  template:
+    src: bashrc.j2
+    dest: "{{ flink_user_home }}/.bashrc"
+  when: inventory_hostname in flink_hosts

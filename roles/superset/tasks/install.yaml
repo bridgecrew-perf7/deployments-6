@@ -1,0 +1,53 @@
+---
+- name: Make sure superset install dir exist
+  file:
+    path: "{{superset_install_dir}}"
+    state: directory
+    owner: root
+    group: root
+  when: inventory_hostname in groups.superset_nodes
+
+- name: Make sure superset conf dir exist
+  file:
+    path: "{{superset_conf_dir}}"
+    state: directory
+    owner: root
+    group: root
+  when: inventory_hostname in groups.superset_nodes
+
+- name: "Copy superset {{ item }} to {{ superset_conf_dir }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ superset_conf_dir }}/{{ item }}"
+  with_items:
+    - Dockerfile
+    - docker-compose.yaml
+    - customize-requirements.txt
+    - app_env
+    - config.py
+    - superset_config.py
+  when: inventory_hostname in groups.superset_nodes
+
+- name: Pull lastest image
+  shell: docker-compose -f {{superset_conf_dir}}/docker-compose.yaml pull
+  when: inventory_hostname in groups.superset_nodes
+
+- name: Stop Superset container
+  shell: docker-compose -f {{superset_conf_dir}}/docker-compose.yaml down
+  when: inventory_hostname in groups.superset_nodes
+
+- name: Start Superset worker
+  shell: docker-compose -f {{superset_conf_dir}}/docker-compose.yaml up -d superset-worker
+  when: inventory_hostname in groups.superset_worker
+
+- name: Start Superset worker beat
+  shell: docker-compose -f {{superset_conf_dir}}/docker-compose.yaml up -d superset-worker-beat
+  when: inventory_hostname in groups.superset_beat
+
+- name: Start Superset frontend
+  shell: docker-compose -f {{superset_conf_dir}}/docker-compose.yaml up -d superset
+  when: inventory_hostname in groups.superset_frontend
+
+- name: Start Superset init
+  shell: docker-compose -f {{superset_conf_dir}}/docker-compose.yaml up -d superset-init
+  when: inventory_hostname in groups.superset_worker[0] and superset_init is defined

@@ -1,0 +1,11 @@
+---
+- import_tasks: user.yml
+  tags:
+    - sqoop_user
+    - sqoop
+
+- import_tasks: base.yml
+  tags:
+    - sqoop_base
+    - sqoop
+

@@ -1,0 +1,61 @@
+- name: Configure core-site.xml
+  template:
+    src: ../hadoop/templates/core-site.xml.j2
+    dest: "{{hadoop_conf_dir}}/core-site.xml"
+    owner: "{{hadoop_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+  tags:
+    - hdfs-core-config
+
+- name: Configure hdfs-site.xml
+  template:
+    src: ../hadoop/templates/hdfs-site.xml.j2
+    dest: "{{hadoop_conf_dir}}/hdfs-site.xml"
+    owner: "{{hadoop_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+  tags:
+    - hdfs-site-config
+
+- name: Configure log4j.properties
+  template:
+    src: ../hadoop/templates/log4j.properties.j2
+    dest: "{{hadoop_conf_dir}}/log4j.properties"
+    owner: "{{hadoop_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+  tags:
+    - hdfs-log4j-config
+
+- name: Download spark_shuffle lib to {{spark_shuffle_download_url}}
+  get_url:
+    url: "{{spark_shuffle_download_url}}"
+    dest: "{{hadoop_install_dir}}/share/hadoop/yarn/lib/{{spark_shuffle_jar_file_name}}"
+    validate_certs: no
+    owner: "{{hadoop_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+  tags:
+    - yarn-site-config
+    - spark-shuffle
+
+- name: Configure yarn-site.xml
+  template:
+    src: ../hadoop/templates/yarn-site.xml.j2
+    dest: "{{hadoop_conf_dir}}/yarn-site.xml"
+    owner: "{{hadoop_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+  tags:
+    - yarn-site-config
+
+- name: Configure mapred-site.xml
+  template:
+    src: ../hadoop/templates/mapred-site.xml.j2
+    dest: "{{hadoop_conf_dir}}/mapred-site.xml"
+    owner: "{{hadoop_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+  tags:
+    - mapred-site-config

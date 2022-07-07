@@ -1,0 +1,41 @@
+---
+- name: Force systemd to reread configs
+  systemd: daemon_reload=yes
+
+- name: Restart namenode
+  service: name=hdfs-namenode state=restarted
+  when:
+    - inventory_hostname in hadoop_namenodes
+    - hadoop_ansible_handlers|bool
+
+- name: Restart datanode
+  service: name=hdfs-datanode state=restarted
+  when:
+    - inventory_hostname in hadoop_datanodes
+    - hadoop_ansible_handlers|bool
+
+- name: Restart journalnode
+  service: name=hdfs-journalnode state=restarted
+  when:
+    - hadoop_ha_enabled
+    - inventory_hostname in hadoop_journalnodes
+    - hadoop_ansible_handlers|bool
+
+- name: Restart zkfc
+  service: name=hdfs-zkfc state=restarted
+  when:
+    - hadoop_ha_enabled
+    - inventory_hostname in hadoop_namenodes
+    - hadoop_ansible_handlers|bool
+
+- name: Restart yarn-nodemanager
+  service: name=yarn-nodemanager state=restarted
+  when:
+    - inventory_hostname in hadoop_nodemanagers
+    - hadoop_ansible_handlers|bool
+
+- name: Restart yarn-resourcemanager
+  service: name=yarn-resourcemanager state=restarted
+  when:
+    - inventory_hostname in hadoop_resourcemanagers
+    - hadoop_ansible_handlers|bool

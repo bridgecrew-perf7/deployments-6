@@ -1,0 +1,47 @@
+---
+- name: Create configure folder
+  file: 
+    path: "{{haproxy_install_dir}}/{{role_name}}"
+    state: directory
+  tags:
+    - haproxy
+
+- name: Copy conf to config folder
+  template: 
+    src: haproxy.cfg.j2 
+    dest: "{{haproxy_install_dir}}/{{ role_name }}/haproxy.cfg"
+  tags: 
+    - haproxy
+    - update_haproxy
+
+- name: Check haproxy config
+  shell: docker exec --tty haproxy sh -c 'cp /usr/local/etc/haproxy/haproxy.cfg /tmp/haproxy.cfg && haproxy -f /tmp/haproxy.cfg -c'
+  register: check_config
+  when: haproxy_update_config
+  tags: 
+    - update_haproxy
+
+- name: haproxy check config
+  debug:
+    msg: "{{check_config.stdout}}"
+  when: haproxy_update_config
+  tags: 
+    - update_haproxy
+
+# - name: Reload haproxy
+#   shell: docker kill -s HUP haproxy
+#   when: 
+#     - check_config.stdout == 'Configuration file is valid'
+#     - haproxy_update_config is defined
+#   tags: 
+#     - update_haproxy
+
+- name: Remove {{ role_name }} container if exist
+  shell: docker stop "{{ role_name }}" || true && docker rm "{{ role_name }}" || true
+  tags: 
+    - haproxy
+
+- name: Start {{ role_name }} container
+  command: docker run -d --name={{ role_name }} --network=host --log-driver=syslog --log-opt tag="{{role_name}}" --log-opt syslog-facility="local1" --log-opt syslog-format="rfc3164" -v {{haproxy_install_dir}}/{{role_name}}/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro --restart=always haproxy:2.5.0-alpine3.15
+  tags: 
+    - haproxy

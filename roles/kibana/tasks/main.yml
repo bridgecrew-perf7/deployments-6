@@ -1,0 +1,23 @@
+---
+- name: Create configure folder
+  file:
+    path: "{{ kibana_install_dir }}"
+    state: directory
+
+- name: Create conf folder
+  file:
+    path: "{{ kibana_install_dir }}/conf"
+    state: directory
+
+- name: Update kibana config
+  template:
+    src: kibana.yml.j2
+    dest: "{{ kibana_install_dir }}/conf/kibana.yml"
+
+- name: Update docker-compose
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ kibana_install_dir }}/docker-compose.yml"
+
+- name: UP kibana 
+  shell: docker-compose -f {{ kibana_install_dir }}/docker-compose.yml  down && docker-compose -f {{ kibana_install_dir }}/docker-compose.yml up -d

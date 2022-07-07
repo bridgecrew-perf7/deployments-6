@@ -1,0 +1,8 @@
+export HADOOP_HOME={{hadoop_install_dir}}
+export HBASE_HOME={{hbase_install_dir}}
+export PATH=$HBASE_HOME/bin:$PATH
+export CLASSPATH=$CLASSPATH.:$HIVE_HOME/lib
+export HBASE_CONF_DIR={{hbase_conf_dir}}
+export JAVA_HOME={{datalandfill_java_home}}
+export PATH=$PATH:$JAVA_HOME/bin
+export HBASE_MANAGES_ZK=false

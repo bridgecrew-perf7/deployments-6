@@ -1,0 +1,14 @@
+[Unit]
+Description={{program}}
+
+[Service]
+User={{hive_user}}
+Group={{hadoop_group}}
+Type=simple
+ExecStart={{hive_bin_dir}}/hive --service {{program}}
+Restart=on-failure
+# TimeoutStartSec=2min
+# TimeoutSec=300
+
+[Install]
+WantedBy=multi-user.target

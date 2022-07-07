@@ -1,0 +1,17 @@
+---
+- name: Check status of superset-frontend
+  block:
+    - name: Check superset frontend status
+      uri:
+        url: "http://127.0.0.1:{{superset_webserver_port}}/health"
+        method: GET
+        status_code: 200
+      register: module_status
+      until: module_status.status == 200
+      retries: 3
+      delay: 3
+  rescue:
+    - command: journalctl -xe -u docker
+      register: api_logs
+    - debug:
+        msg: "{{ api_logs.stderr_lines }}"

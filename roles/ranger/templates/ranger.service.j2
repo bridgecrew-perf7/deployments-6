@@ -1,0 +1,17 @@
+[Unit]
+# ranger-service
+Description={{ program }}
+
+[Service]
+Type=forking
+User={{ranger_user}}
+Group={{ranger_group}}
+EnvironmentFile={{ranger_install_dir}}/ranger-env.sh
+Restart=on-failure
+ExecStart={{ ranger_ews_dir }}/ranger-admin-services.sh start
+ExecStop={{ ranger_ews_dir }}/ranger-admin-services.sh stop
+ExecReload={{ ranger_ews_dir }}/ranger-admin-services.sh restart
+#PIDFile={{ ranger_install_dir }}/ranger.pid
+
+[Install]
+WantedBy=multi-user.target

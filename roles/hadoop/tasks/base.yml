@@ -1,0 +1,101 @@
+---
+- name: Make sure {{datalandfill_root_dir}} dir exists
+  file:
+    path: "{{hadoop_install_dir}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+    follow: yes
+
+- name: Download Hadoop .tgz to {{datalandfill_root_dir}}
+  get_url:
+    url: "{{hadoop_download_url}}"
+    dest: "{{datalandfill_root_dir}}/hadoop-{{hadoop_version}}.tar.gz"
+    validate_certs: no
+
+- name: Unarchive downloaded Hadoop
+  unarchive:
+    src: "{{datalandfill_root_dir}}/hadoop-{{ hadoop_version }}.tar.gz"
+    dest: "{{hadoop_install_dir}}"
+    creates: "{{datalandfill_soft_link}}/hadoop"
+    owner: "{{hadoop_user}}"
+    group: "{{hadoop_group}}"
+    remote_src: yes
+    mode: 0755
+    extra_opts: [--strip-components=1]
+  when: hadoop_distribution_method == "download"
+
+- name: Remove hadoop-{{ hadoop_version }}.tar.gz
+  file:
+    path: "{{datalandfill_root_dir}}/hadoop-{{ hadoop_version }}.tar.gz"
+    state: absent
+
+- name: Create folder /etc/hadoop
+  file:
+    path: /etc/hadoop
+    state: directory
+    owner: "{{hadoop_user}}"
+    group: "{{hadoop_group}}"
+
+- name: Create hadoop link for conf to /etc/hadoop
+  file:
+    src: "{{hadoop_conf_dir}}"
+    dest: "{{hadoop_conf_symlink_dir}}"
+    owner: "{{hadoop_user}}"
+    group: "{{hadoop_group}}"
+    state: link
+
+- name: Create link for hdfs to /usr/local/bin
+  file:
+    src: "{{hadoop_bin_dir}}/{{item}}"
+    dest: "/usr/local/bin/{{item}}"
+    owner: "{{hadoop_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+    state: link
+  with_items:
+    - hdfs
+    - yarn
+    - hadoop
+
+- name: Export hadoop variables
+  copy:
+    content: "export HADOOP_HOME={{hadoop_install_dir}}\nexport HADOOP_CONF_DIR={{hadoop_conf_dir}}\nexport HADOOP_LIBEXEC_DIR={{hadoop_install_dir}}/libexec\nexport HADOOP_CLASSPATH=`/usr/local/bin/hadoop classpath`\nexport JAVA_HOME={{datalandfill_java_home}}\nexport PATH=$PATH:$JAVA_HOME/bin\nexport HDFS_ZKFC_USER={{hadoop_user}}\nexport HDFS_JOURNALNODE_USER={{hadoop_user}}\nexport HDFS_NAMENODE_USER={{hadoop_user}}\nexport YARN_NODEMANAGER_USER={{hadoop_user}}\nexport YARN_RESOURCEMANAGER_USER={{hadoop_user}}"
+    dest: "/etc/profile.d/hadoop_exports.sh"
+    mode: 0755
+
+- name: Allow hadoop variables keeping for sudoers
+  template:
+    src: hadoop_sudoers.j2
+    dest: /etc/sudoers.d/hadoop
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Create hadoop tmp dir
+  file:
+    path: "{{hadoop_tmp_dir}}"
+    state: directory
+    owner: "{{hadoop_user}}"
+    group: "{{hadoop_group}}"
+    mode: 1777
+  tags:
+    - skip_ansible_lint
+
+- name: Create hadoop log dir
+  file:
+    path: "{{hadoop_log_dir}}"
+    state: directory
+    owner: "{{hadoop_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+
+- name: Create directory for unix sockets
+  file:
+    path: "{{hadoop_dfs_domain_socket_path_folder}}"
+    state: directory
+    owner: "{{hadoop_user}}"
+    group: root
+    mode: 0755
+  when: hadoop_enable_short_circuit_reads

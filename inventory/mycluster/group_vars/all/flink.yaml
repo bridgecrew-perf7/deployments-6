@@ -1,0 +1,14 @@
+---
+## flink's configuration will define here.
+# Symlink for flink to the version you are installing
+flink_hosts: "{{ groups.flink_nodes }}"
+flink_user_home: "/home/{{flink_user}}"
+flink_install_dir: "{{ datalandfill_root_dir }}/flink"
+flink_conf_dir: "{{flink_install_dir}}/conf"
+flink_bin_dir: "{{flink_install_dir}}/bin"
+flink_log_dir: /var/log/flink
+flink_tmp_dir: /tmp/flink
+flink_user: flink
+flink_scala_version: 2.11
+flink_file_name: "flink-{{flink_version}}-bin-scala_{{flink_scala_version}}.tgz"
+flink_download_url: "{{datalandfill_repo_url}}/flink/{{flink_version}}/{{flink_file_name}}"

@@ -1,0 +1,27 @@
+global:
+  scrape_interval:     10s
+  evaluation_interval: 30s
+
+scrape_configs:
+- job_name: prometheus
+  honor_labels: true
+  static_configs:
+  - targets: ['localhost:9990']
+
+- job_name: 'namenode'
+  scrape_interval: 15s
+  honor_labels: true
+  metrics_path: '/metrics'
+  static_configs:
+  - targets: ['10.110.68.36:6689','10.110.68.37:6689']
+  tls_config:
+      insecure_skip_verify: true
+
+- job_name: 'resourcemanager'
+  scrape_interval: 15s
+  honor_labels: true
+  metrics_path: '/metrics'
+  static_configs:
+  - targets: ['10.110.68.40:6689','10.110.68.41:6689','10.110.68.42:6689']
+  tls_config:
+      insecure_skip_verify: true

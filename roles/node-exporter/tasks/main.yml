@@ -1,0 +1,61 @@
+---
+#################################################
+# Running Node Exporter Container
+#################################################
+
+- name: Open 9100 port in iptables for Prometheus monitor server
+  iptables:
+    chain: INPUT
+    protocol: tcp
+    source: 10.110.64.67
+    destination_port: 9100
+    jump: ACCEPT
+    action: insert
+    comment: "ALLOW CONNECT FROM PROMETHEUS MONITOR SERVER "
+  become: yes
+  tags: 
+    - node-exporter
+
+# - name: Persisten iptables rule
+#   shell: iptables-save > /etc/iptables/rules.v4
+#   ignore_errors: yes
+#   tags:
+#     - node-exporter
+
+# - name: Stop exporter native
+#   shell: systemctl disable node_exporter && systemctl stop node_exporter
+#   tags:
+#     - node-exporter
+
+# - name: Download Node Exporter Native
+#   shell: cd /tmp && wget https://github.com/prometheus/node_exporter/releases/download/v1.3.1/node_exporter-1.3.1.linux-amd64.tar.gz && tar xvfz node_exporter-1.3.1.linux-amd64.tar.gz && cd node_exporter-1.3.1.linux-amd64 && mv node_exporter /usr/local/bin/ && useradd -rs /bin/false node_exporter
+#   tags:
+#     - node-exporter
+
+# - name: Create node_exporter systemd service
+#   template:
+#     src: node_exporter.service.j2
+#     dest: "/etc/systemd/system/node_exporter.service"
+#     owner: root
+#     group: root
+#     mode: 0644
+#   tags:
+#     - node-exporter
+
+# - name: Start Node Exporter Native
+#   shell: systemctl daemon-reload && systemctl enable node_exporter && systemctl start node_exporter
+#   tags:
+#     - node-exporter
+
+- name: Remove Old Node Exporter
+  shell: docker rm -f node-exporter
+  ignore_errors: yes
+  tags:
+    - node-exporter
+
+- name: Install Node Exporter
+  # shell: docker run -dit -p {{ inventory_hostname }}:9100:9100  --pid="host" -v "/:/host:ro,rslave" --name="node-exporter" --log-driver=json-file --log-opt max-size=10m --log-opt max-file=5 --restart=always quay.io/prometheus/node-exporter:latest --path.rootfs=/host
+  shell: docker run -dit --net="host" --pid="host" -v "/:/host:ro,rslave" --name="node-exporter" --log-driver=json-file --log-opt max-size=10m --log-opt max-file=5 --restart=always quay.io/prometheus/node-exporter:latest --path.rootfs=/host --web.listen-address={{ inventory_hostname }}:9100
+  # shell: docker run -dit --net="host" --pid="host" -v "/:/host:ro,rslave" --name="node-exporter" --log-driver=json-file --log-opt max-size=10m --log-opt max-file=5 --restart=always registry.giaohangtietkiem.vn/devops/node-exporter:v1.1.2 --path.rootfs=/host --web.listen-address={{ inventory_hostname }}:9100
+  tags:
+    - node-exporter

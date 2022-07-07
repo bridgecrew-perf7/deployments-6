@@ -1,0 +1,49 @@
+---
+- name: Configure trino-env.sh
+  template:
+    src: trino-env.sh.j2
+    dest: "{{trino_conf_dir}}/trino-env.sh"
+    owner: "{{trino_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+  tags:
+    - trino-env
+  when: inventory_hostname in trino_hosts
+
+- name: Configure trino-defaults-conf
+  template:
+    src: "etc/{{item}}"
+    dest: "{{trino_conf_dir}}/{{item}}"
+    owner: "{{trino_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+  tags:
+    - trino-config
+  with_items:
+    - config.properties
+    - jvm.config
+    - log.properties
+    - node.properties
+    - password-authenticator.properties
+    - ad.crt
+    - access-control.properties
+  when: inventory_hostname in trino_hosts
+
+- name: Remove old log
+  shell: rm -rf {{trino_data_dir}}/var/log/*
+  when: inventory_hostname in trino_hosts
+
+- name: Restart trino-worker
+  service:
+    name: trino-worker
+    state: restarted
+    enabled: yes
+  when: inventory_hostname in groups.trino_worker
+
+- name: Restart trino-coordinator
+  service:
+    name: trino-coordinator
+    state: restarted
+    enabled: yes
+  when: inventory_hostname in groups.trino_coordinator
+

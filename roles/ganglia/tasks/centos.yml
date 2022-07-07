@@ -1,0 +1,110 @@
+---
+- name: Install ganglia server (CentOS)
+  yum: 
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - ganglia-gmetad
+    - ganglia-web
+  when: inventory_hostname in groups.gmetad
+  tags:
+    - gmetad_install
+
+- name: Managerment file ganglia.conf for httpd
+  template: src=ganglia_centos.conf dest=/etc/httpd/conf.d/ganglia.conf owner=root group=root mode=0644
+  notify:
+    - restart httpd
+  when: inventory_hostname in groups.gmetad
+  tags:
+    - gmetad
+
+- name: Replace load_one with network_report
+  replace: >
+    dest=/usr/share/ganglia/conf_default.php
+    regexp='"load_one"'
+    replace='"network_report"'
+  when: inventory_hostname in groups.gmetad
+  tags:
+    - gmetad
+
+- name: Replace mem_report with network_report in meta view
+  replace: >
+    dest=/usr/share/ganglia/templates/default/meta_view.tpl
+    regexp='g=mem_report'
+    replace='g=network_report'
+  when: inventory_hostname in groups.gmetad
+  tags:
+    - gmetad
+
+- name: Replace load_report with cpu_report in meta view
+  replace: >
+    dest=/usr/share/ganglia/templates/default/meta_view.tpl
+    regexp='g=load_report'
+    replace='g=cpu_report'
+  when: inventory_hostname in groups.gmetad
+  tags:
+    - gmetad
+
+- name: Use "by name" as the default sorting method
+  replace: >
+    dest=/usr/share/ganglia/get_context.php
+    regexp='sort = "descending"'
+    replace='sort = "by name"'
+  when: inventory_hostname in groups.gmetad
+  tags:
+    - gmetad
+
+- name: Managerment file gmetad.conf
+  template: src=gmetad_centos.conf dest=/etc/ganglia/gmetad.conf owner=root group=root mode=0644
+  notify:
+    - restart gmetad
+  when: inventory_hostname in groups.gmetad
+  tags:
+    - gmetad
+    - update_config
+
+- name: Start gmetad running
+  service: name=gmetad state=started enabled=yes
+  when: inventory_hostname in groups.gmetad
+  tags:
+    - gmetad
+
+- name: Ensure httpd is running
+  service: name=httpd state=started enabled=yes
+  when: inventory_hostname in groups.gmetad
+  tags:
+    - gmetad
+
+
+- name: Install ganglia client (CentOS)
+  yum: 
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - ganglia
+    - ganglia-gmond
+    - ganglia-gmond-python
+  when: inventory_hostname in groups.gmond
+  tags:
+    - gmond
+
+- name: Managerment file gmonf.conf
+  template: src=gmond_centos.conf dest=/etc/ganglia/gmond.conf owner=root group=root mode=0644
+  notify:
+    - restart gmond_centos
+  when: inventory_hostname in groups.gmond
+  tags:
+    - gmond
+    - gmond_config
+
+- name: Start gmond service
+  service: name=gmond state=started enabled=yes
+  when: inventory_hostname in groups.gmond
+  tags:
+    - gmond
+
+- name: Restart gmond
+  service: name=gmond state=restarted enabled=yes
+  when: inventory_hostname != groups[group_names[0]][0] and inventory_hostname in groups.gmond
+  tags:
+    - gmond_restart

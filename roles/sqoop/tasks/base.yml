@@ -1,0 +1,118 @@
+---
+- name: Create {{sqoop_install_dir}}
+  file:
+    path: "{{sqoop_install_dir}}"
+    state: directory
+    owner: "{{sqoop_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in sqoop_hosts
+
+- name: Download Sqoop Hadoop binary sources to {{datalandfill_root_dir}}
+  get_url:
+    url: "{{sqoop_source_hadoop_url}}"
+    dest: "{{datalandfill_root_dir}}/{{sqoop_source_hadoop_file}}"
+    validate_certs: no
+  when: inventory_hostname in sqoop_hosts and sqoop_on_hadoop
+
+- name: Unarchive downloaded Sqoop Hadoop binary sources
+  unarchive:
+    src: "{{datalandfill_root_dir}}/{{sqoop_source_hadoop_file}}"
+    dest: "{{sqoop_install_dir}}"
+    owner: "{{sqoop_user}}"
+    group: "{{hadoop_group}}"
+    remote_src: yes
+    mode: 0755
+    extra_opts: [--strip-components=1]
+  when: inventory_hostname in sqoop_hosts and sqoop_on_hadoop
+
+- name: Remove {{datalandfill_root_dir}}/{{sqoop_source_hadoop_file}}
+  file:
+    path: "{{datalandfill_root_dir}}/{{sqoop_source_hadoop_file}}"
+    state: absent
+  when: inventory_hostname in sqoop_hosts and sqoop_on_hadoop
+
+- name: Export sqoop variables
+  copy:
+    content: "export HADOOP_HOME={{hadoop_install_dir}}\nexport HADOOP_CONF_DIR={{hadoop_conf_dir}}\nexport HADOOP_LIBEXEC_DIR={{hadoop_install_dir}}/libexec\nexport HADOOP_CLASSPATH=`/usr/local/bin/hadoop classpath`\nexport JAVA_HOME={{datalandfill_java_home}}\nexport SQOOP_HOME={{sqoop_install_dir}}\nexport PATH=$PATH:$SQOOP_HOME/bin:$JAVA_HOME/bin\nexport LD_LIBRARY_PATH={{hadoop_install_dir}}/lib/native:$LD_LIBRARY_PATH"
+    dest: "/etc/profile.d/sqoop_exports.sh"
+    mode: 0755
+  when: inventory_hostname in sqoop_hosts
+
+- name: Create folder /etc/sqoop
+  file:
+    path: /etc/sqoop
+    state: directory
+    owner: "{{sqoop_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in sqoop_hosts
+
+- name: Create sqoop link for conf to /etc/sqoop
+  file:
+    src: "{{sqoop_conf_dir}}"
+    dest: /etc/sqoop/conf
+    owner: "{{sqoop_user}}"
+    group: "{{hadoop_group}}"
+    state: link
+  when: inventory_hostname in sqoop_hosts
+
+- name: Create link for {{item}} to /usr/local/bin
+  file:
+    src: "{{sqoop_bin_dir}}/{{item}}"
+    dest: "/usr/local/bin/{{item}}"
+    owner: "{{sqoop_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+    state: link
+  when: inventory_hostname in sqoop_hosts
+  with_items:
+    - configure-sqoop
+    - sqoop
+    - sqoop-codegen
+    - sqoop-create-hive-table
+    - sqoop-eval
+    - sqoop-export
+    - sqoop-help
+    - sqoop-import
+    - sqoop-import-all-tables
+    - sqoop-import-mainframe
+    - sqoop-job
+    - sqoop-list-databases
+    - sqoop-list-tables
+    - sqoop-merge
+    - sqoop-metastore
+    - sqoop-version
+
+
+- name: Download Sqoop common lang binary to {{datalandfill_root_dir}}
+  get_url:
+    url: "{{sqoop_common_lang_url}}"
+    dest: "{{datalandfill_root_dir}}/{{sqoop_common_lang_file}}"
+    validate_certs: no
+  when: inventory_hostname in sqoop_hosts and sqoop_on_hadoop
+
+- name: Unarchive downloaded Sqoop common lang binary
+  unarchive:
+    src: "{{datalandfill_root_dir}}/{{sqoop_common_lang_file}}"
+    dest: "{{sqoop_install_dir}}/lib"
+    owner: "{{sqoop_user}}"
+    group: "{{hadoop_group}}"
+    remote_src: yes
+    mode: 0755
+    extra_opts: [--strip-components=1]
+  when: inventory_hostname in sqoop_hosts and sqoop_on_hadoop
+
+- name: Remove "{{datalandfill_root_dir}}/{{sqoop_common_lang_file}}"
+  file:
+    path: "{{datalandfill_root_dir}}/{{sqoop_common_lang_file}}"
+    state: absent
+  when: inventory_hostname in sqoop_hosts and sqoop_on_hadoop
+
+- name: Download mysql connector to {{sqoop_lib_dir}}
+  get_url:
+    url: "{{mysql_connector_url}}"
+    dest: "{{sqoop_lib_dir}}"
+    owner: "{{sqoop_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+    validate_certs: no
+  when: inventory_hostname in sqoop_hosts and sqoop_on_hadoop

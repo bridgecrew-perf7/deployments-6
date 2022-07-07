@@ -1,0 +1,16 @@
+---
+- import_tasks: user.yml
+  tags:
+    - flink_user
+    - flink
+
+- import_tasks: base.yml
+  tags:
+    - flink_base
+    - flink
+
+- import_tasks: config.yml
+  tags:
+    - flink_base
+    - flink_config
+    - flink

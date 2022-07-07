@@ -1,0 +1,96 @@
+---
+- name: Pause - Bootstrapping is about to begin
+  pause:
+    prompt: "Are you sure that you want to continue bootstrapping HDFS?"
+    seconds: 5
+
+- name: Ensure that zookeeper is running
+  service:
+    name: confluent-zookeeper
+    state: restarted
+  when: inventory_hostname in groups['zookeeper_node']
+
+- name: Ensure that journal nodes are running
+  service:
+    name: hdfs-journalnode
+    state: started
+  when: inventory_hostname in hadoop_journalnodes
+
+- name: Format namenode {{hadoop_namenodes[0]}}
+  command: bash -lc "./hdfs namenode -format {{ hadoop_cluster_name }} -force"
+  args:
+    creates: "{{hadoop_namenode_dir_list[0]}}/current/VERSION"
+    chdir: "{{ hadoop_bin_dir }}"
+  become: true
+  become_user: "{{hadoop_user}}"
+  when: inventory_hostname == hadoop_namenodes[0]
+
+- name: Start namenode "{{hadoop_namenodes[0]}}"
+  service:
+    name: hdfs-namenode
+    state: started
+  when: inventory_hostname == hadoop_namenodes[0]
+
+- name: Wait for the namenode "{{ hadoop_namenodes[0] }}" to come online
+  wait_for:
+    host: "{{ hadoop_namenodes[0] }}"
+    port: 50070
+  when: inventory_hostname in hadoop_namenodes[0]
+
+- name: Stop namenode {{hadoop_namenodes[1]}}
+  service:
+    name: hdfs-namenode
+    state: stopped
+  when: inventory_hostname == hadoop_namenodes[1]
+
+- name: Bootstrap the standby namenode ({{hadoop_namenodes[1]}})
+  command: bash -lc "./hdfs namenode -bootstrapStandby && touch {{hadoop_namenode_dir_list[0]}}/.bootstrapped"
+  args:
+    creates: "{{hadoop_namenode_dir_list[0]}}/.bootstrapped"
+    chdir: "{{ hadoop_bin_dir }}"
+  become: true
+  become_user: "{{hadoop_user}}"
+  when: inventory_hostname == hadoop_namenodes[1]
+
+- name: Start namenode {{hadoop_namenodes[1]}}
+  service:
+    name: hdfs-namenode
+    state: started
+  when: inventory_hostname == hadoop_namenodes[1]
+
+- name: Format ZK for zkfc
+  command: bash -lc "./hdfs zkfc -formatZK -force && touch {{hadoop_namenode_dir_list[0]}}/.zkFormatted"
+  args:
+    creates: "{{hadoop_namenode_dir_list[0]}}/.zkFormatted"
+    chdir: "{{ hadoop_bin_dir }}"
+  become: true
+  become_user: "{{hadoop_user}}"
+  when: inventory_hostname == hadoop_namenodes[0]
+
+- name: Start zkfc services
+  service:
+    name: hdfs-zkfc
+    state: started
+  when: inventory_hostname in hadoop_namenodes
+
+- name: Start data nodes
+  service:
+    name: hdfs-datanode
+    state: started
+  when: inventory_hostname in hadoop_datanodes
+
+- name: Start yarn-nodemanager
+  service:
+    name: yarn-nodemanager
+    state: started
+  when: inventory_hostname in hadoop_nodemanagers
+
+- name: Start yarn-resourcemanager
+  service:
+    name: yarn-resourcemanager
+    state: started
+  when: inventory_hostname in hadoop_resourcemanagers
+
+- name: Bootstrapping complete
+  debug: "msg='New namenode can be opened at http://{{ inventory_hostname }}:50070/'"
+  when: inventory_hostname in hadoop_namenodes

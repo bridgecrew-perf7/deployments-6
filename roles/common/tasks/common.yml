@@ -1,0 +1,31 @@
+---
+- name: Update hostname
+  command: "hostnamectl set-hostname {{inventory_hostname}}"
+
+- name: Set timezone {{ datalandfill_timezone }}
+  timezone:
+    name: "{{ datalandfill_timezone }}"
+
+- name: Update the /etc/hosts file with node name
+  lineinfile:
+    dest: "/etc/hosts"
+    regexp: ".*\t{{ hostvars[item]['ansible_hostname']}}\t{{ hostvars[item]['ansible_hostname']}}"
+    line: "{{ hostvars[item]['ansible_default_ipv4']['address'] }}\t{{ hostvars[item]['ansible_hostname']}}"
+    state: present
+    backup: yes
+  when: ansible_hostname != "{{ item }}" or ansible_hostname == "{{ item }}"
+  with_items: "{{groups['hadoop_cluster']}}"
+
+# - name: Replace a localhost entry with our own
+#   lineinfile:
+#     path: /etc/hosts
+#     regexp: '^127.0.1.1(.*)ubuntu1804$'
+#     line: "127.0.1.1 {{ hostvars[inventory_hostname].ansible_hostname }}"
+#     owner: root
+#     group: root
+#     mode: '0644'
+
+# - name: Update file hosts
+#   template:
+#     src: hosts.j2
+#     dest: /etc/hosts

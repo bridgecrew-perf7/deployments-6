@@ -1,0 +1,98 @@
+---
+- name: Create {{flink_install_dir}}
+  file:
+    path: "{{flink_install_dir}}"
+    state: directory
+    owner: "{{flink_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in flink_hosts
+
+- name: Download flink .tgz to {{datalandfill_root_dir}}
+  get_url:
+    url: "{{flink_download_url}}"
+    dest: "{{datalandfill_root_dir}}/{{flink_file_name}}"
+    validate_certs: no
+  when: inventory_hostname in flink_hosts
+
+- name: Unarchive downloaded flink
+  unarchive:
+    src: "{{datalandfill_root_dir}}/{{flink_file_name}}"
+    dest: "{{flink_install_dir}}"
+    owner: "{{flink_user}}"
+    group: "{{hadoop_group}}"
+    remote_src: yes
+    mode: 0755
+    extra_opts: [--strip-components=1]
+  when: inventory_hostname in flink_hosts
+
+- name: Remove {{datalandfill_root_dir}}/{{flink_file_name}}
+  file:
+    path: "{{datalandfill_root_dir}}/{{flink_file_name}}"
+    state: absent
+  when: inventory_hostname in flink_hosts
+
+- name: Create folder /etc/flink
+  file:
+    path: /etc/flink
+    state: directory
+    owner: "{{flink_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in flink_hosts
+
+- name: Create flink link for conf to /etc/flink
+  file:
+    src: "{{flink_conf_dir}}"
+    dest: /etc/flink/conf
+    owner: "{{flink_user}}"
+    group: "{{hadoop_group}}"
+    state: link
+  when: inventory_hostname in flink_hosts
+
+- name: Create link for {{item}} to /usr/local/bin
+  file:
+    src: "{{flink_bin_dir}}/{{item}}"
+    dest: "/usr/local/bin/{{item}}"
+    owner: "{{flink_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+    state: link
+  when: inventory_hostname in flink_hosts
+  with_items:
+    - flink
+
+
+- name: Export flink variables
+  copy:
+    content: "export HADOOP_HOME={{hadoop_install_dir}}\nexport HADOOP_CONF_DIR={{hadoop_conf_dir}}\nexport HADOOP_LIBEXEC_DIR={{hadoop_install_dir}}/libexec\nexport HADOOP_CLASSPATH=`/usr/local/bin/hadoop classpath`\nexport JAVA_HOME={{datalandfill_java_home}}\nexport PATH=$PATH:$JAVA_HOME/bin\nexport FLINK_HOME={{flink_install_dir}}\nexport LD_LIBRARY_PATH={{hadoop_install_dir}}/lib/native:$LD_LIBRARY_PATH"
+    dest: "/etc/profile.d/flink_exports.sh"
+    mode: 0755
+  when: inventory_hostname in flink_hosts
+
+- name: Allow flink variables keeping for sudoers
+  template:
+    src: flink_sudoers.j2
+    dest: /etc/sudoers.d/flink
+    owner: root
+    group: root
+    mode: 0644
+  when: inventory_hostname in flink_hosts
+
+- name: Create flink tmp dir
+  file:
+    path: "{{flink_tmp_dir}}"
+    state: directory
+    owner: "{{flink_user}}"
+    group: "{{hadoop_group}}"
+    mode: 1777
+  tags:
+    - skip_ansible_lint
+  when: inventory_hostname in flink_hosts
+
+- name: Create flink log dir
+  file:
+    path: "{{flink_log_dir}}"
+    state: directory
+    owner: "{{flink_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+  when: inventory_hostname in flink_hosts

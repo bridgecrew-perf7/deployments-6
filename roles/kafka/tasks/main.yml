@@ -1,0 +1,18 @@
+---
+- import_tasks: base.yaml
+  tags:
+    - kafka_base
+    - kafka
+
+- import_tasks: config.yaml
+  tags:
+    - kafka_base
+    - kafka_config
+    - kafka
+
+- import_tasks: health_check.yaml
+  tags:
+    - kafka_base
+    - kafka_config
+    - kafka_health_check
+    - kafka

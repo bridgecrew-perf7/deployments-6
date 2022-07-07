@@ -1,0 +1,21 @@
+# Maintained by Ansible
+log.dirs={% for logdir in kafka.datadir %}{% if loop.index > 1%},{% endif %}{{ logdir }}{% endfor %}
+
+broker.id={{ broker_id | default(groups.kafka.index(inventory_hostname) + 1)}}
+
+{% for key, value in kafka.properties.items() %}
+{{key}}={{value}}
+{% endfor %}
+
+listener.security.protocol.map={% for listener in kafka_listeners|dict2items %}{% if loop.index > 1%},{% endif %}{{ listener['value']['name'] }}:{{ listener['value'] | kafka_protocol_defaults(ssl_enabled, sasl_protocol)}}{% endfor %}
+
+listeners={% for listener in kafka_listeners|dict2items %}{% if loop.index > 1%},{% endif %}{{ listener['value']['name'] }}://:{{ listener['value']['port'] }}{% endfor %}
+
+advertised.listeners={% for listener in kafka_listeners|dict2items %}{% if loop.index > 1%},{% endif %}{{ listener['value']['name'] }}://{{ listener['value']['hostname'] | default(inventory_hostname) }}:{{ listener['value']['port'] }}{% endfor %}
+
+## Inter Broker Listener Configuration
+inter.broker.listener.name={{kafka_listeners[kafka_inter_broker_listener_name]['name']}}
+
+# Zookeeper Configuration
+zookeeper.connect={% for host in groups['zookeeper'] %}{% if loop.index > 1%},{% endif %}{{ host }}:{{zookeeper_client_port}}{% endfor %}
+

@@ -1,0 +1,22 @@
+---
+- import_tasks: user.yml
+  tags:
+    - hbase_user
+    - hbase
+
+- import_tasks: base.yml
+  tags:
+    - hbase_base
+    - hbase
+
+- import_tasks: config.yml
+  tags:
+    - hbase_base
+    - hbase_config
+    - hbase
+
+- name: debug
+  debug:
+    msg: "{{ groups.hbase_nodes }}"
+  tags:
+    debug_mode

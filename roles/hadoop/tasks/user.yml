@@ -1,0 +1,37 @@
+---
+- name: Add hadoop group on all machines
+  group:
+    name: "{{hadoop_group}}"
+    state: present
+
+- name: Add hadoop user on first namenode only and generate an ssh key
+  user:
+    name: "{{hadoop_user}}"
+    comment: "Hadoop superuser"
+    uid: 1040
+    group: "{{hadoop_group}}"
+    groups: sudo
+    createhome: yes
+    shell: /bin/bash
+    generate_ssh_key: "{{ hadoop_ssh_fence }}"
+  when: inventory_hostname == groups['hadoop_master_node'][0]
+
+- name: Create user on all machines
+  user:
+    name: "{{hadoop_user}}"
+    comment: "Hadoop superuser"
+    uid: 1040
+    group: "{{hadoop_group}}"
+    groups: sudo
+    home: "{{ hadoop_user_home }}"
+    createhome: yes
+    shell: /bin/bash
+  register: created_user
+
+- name: update ~/.bashrc
+  template:
+    src: bashrc.j2
+    dest: "{{ hadoop_user_home }}/.bashrc"
+
+- import_tasks: ssh_fence.yml
+  when: hadoop_ssh_fence and inventory_hostname in groups['hadoop_cluster']

@@ -1,0 +1,16 @@
+---
+
+- name: restart gmetad
+  service: name=gmetad state=restarted
+
+- name: restart httpd
+  service: name=httpd state=restarted
+
+- name: restart apache2
+  service: name=apache2 state=restarted
+
+- name: restart gmond_centos
+  service: name=gmond state=restarted
+
+- name: restart gmond_ubuntu
+  shell: /etc/init.d/ganglia-monitor restart

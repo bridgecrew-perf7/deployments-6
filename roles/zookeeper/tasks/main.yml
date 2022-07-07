@@ -1,0 +1,18 @@
+---
+- import_tasks: base.yaml
+  tags:
+    - zookeeper_base
+    - zookeeper
+
+- import_tasks: config.yaml
+  tags:
+    - zookeeper_base
+    - zookeeper_config
+    - zookeeper
+
+- import_tasks: health_check.yaml
+  tags:
+    - zookeeper_base
+    - zookeeper_config
+    - zookeeper_health_check
+    - zookeeper

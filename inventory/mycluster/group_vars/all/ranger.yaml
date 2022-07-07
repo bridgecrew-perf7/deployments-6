@@ -1,0 +1,50 @@
+---
+ranger_sql_connector_jar: /usr/share/java/mysql-connector-java-5.1.46-bin.jar
+ranger_mysql_user: ranger
+ranger_mysql_pass: 45chY3CpKgeGppNMJ^*^
+ranger_mysql_host: "{{ hostvars[groups.mysql_nodes[0]]['ansible_host'] }}"
+
+ranger_setup_init: true
+ranger_hosts: "{{ groups.ranger_nodes }}"
+ranger_user: ranger
+ranger_group: ranger
+ranger_user_home: "/home/{{ranger_user}}"
+ranger_install_dir: "{{ datalandfill_root_dir }}/ranger"
+ranger_ews_dir: "{{ranger_install_dir}}/ews"
+ranger_bin_dir: "{{ranger_install_dir}}/bin"
+ranger_lib_dir: "{{ranger_install_dir}}/lib"
+ranger_audit_store: elasticsearch
+ranger_admin_pass: Ranger@admin@123##
+ranger_es_user: ""
+ranger_es_password: ""
+ranger_es_index: ranger_audits
+ranger_es_url: "{{groups['es_master'][0]}}"
+ranger_es_port: 9200
+ranger_es_protocol: http
+ranger_admin_url: http://{{groups['ranger_admin'][0]}}:6080
+ranger_source_url: https://github.com/aakashnand/trino-ranger-demo/releases/download/trino-ranger-demo-v1.0
+ranger_download_url: "{{ranger_source_url}}/ranger-{{ranger_version}}-admin.tar.gz"
+ranger_admin_max_heap_size: 1g
+ranger_usersync_filename: ranger-{{ranger_version}}-usersync.tar.gz
+ranger_usersync_download_url: "{{datalandfill_repo_url}}/ranger/{{ranger_usersync_filename}}"
+ranger_authentication_method: ACTIVE_DIRECTORY  #LDAP|ACTIVE_DIRECTORY|UNIX|NONE
+
+ranger_ldap_url:
+ranger_ldap_userdn_pattern:
+ranger_ldap_group_searchbase:
+ranger_ldap_group_searchfilter:
+ranger_ldap_group_role_attribute:
+ranger_ldap_basedn:
+ranger_ldap_binddn:
+ranger_ldap_bind_password:
+ranger_ldap_referral:
+ranger_ldap_user_searchfilter:
+
+
+ranger_ad_domain: dteso.internal
+ranger_ad_url: ldap://10.110.78.103:389
+ranger_ad_basedn: ou=tech,dc=dteso,dc=internal
+ranger_ad_binddn: cn=data-integration,ou=tech,dc=dteso,dc=internal
+ranger_ad_bind_password: dteso2022^*^
+ranger_ad_referral: follow  ##follow|ignore
+ranger_ad_user_search_filter: (sAMAccountName={0})

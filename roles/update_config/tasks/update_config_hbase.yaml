@@ -1,0 +1,44 @@
+---
+- name: Configure {{item}}
+  template:
+    src: "../hbase/templates/{{item}}.j2"
+    dest: "{{hbase_conf_dir}}/{{item}}"
+    owner: "{{hbase_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+  with_items:
+    - hbase-env.sh
+    - hbase-site.xml
+    - regionservers
+    - hbase-jmxetric-logging.properties
+    - hbase-master-jmxetric.xml
+    - hbase-regionserver-jmxetric.xml
+  tags:
+    - hbase-env
+  when: inventory_hostname in hbase_hosts
+
+- name: Stop hbase-master
+  service:
+    name: hbase-master
+    state: stopped
+  when: inventory_hostname in hbase_hosts and inventory_hostname in groups.hbase_master_nodes
+
+- name: Stop hbase-regionserver
+  service:
+    name: hbase-regionserver
+    state: stopped
+  when: inventory_hostname in hbase_hosts and inventory_hostname in groups.hbase_regionserver_nodes
+
+- name: Start hbase-master
+  service:
+    name: hbase-master
+    state: started
+    enabled: yes
+  when: inventory_hostname in hbase_hosts and inventory_hostname in groups.hbase_master_nodes
+
+- name: Start hbase-regionserver
+  service:
+    name: hbase-regionserver
+    state: started
+    enabled: yes
+  when: inventory_hostname in hbase_hosts and inventory_hostname in groups.hbase_regionserver_nodes

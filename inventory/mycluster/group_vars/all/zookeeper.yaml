@@ -1,0 +1,64 @@
+---
+## zookeeper's configuration will define here.
+confluent_repository_baseurl: "https://packages.confluent.io"
+confluent_repository_debian_baseurl: "{{confluent_repository_baseurl}}/deb"
+confluent_repository_debian_key_url: "{{confluent_repository_debian_baseurl}}/{{confluent_repo_version}}/archive.key"
+confluent_repository_debian_repository: "deb [arch=amd64] {{confluent_repository_debian_baseurl}}/{{confluent_repo_version}} stable main"
+
+zookeeper_service_name: confluent-zookeeper
+zookeeper_packages:
+  - confluent-common
+  - confluent-rest-utils
+  - confluent-metadata-service
+  - confluent-kafka-2.12
+zookeeper_user: cp-kafka
+zookeeper_group: confluent
+zookeeper_user_home: "/home/{{zookeeper_user}}"
+health_checks_enabled: true
+zookeeper_health_check_command: "exec 42<>/dev/tcp/127.0.0.1/{{zookeeper.properties.clientPort}}; echo -e 'srvr' >&42; cat <&42"
+
+zookeeper:
+  config_file: /etc/kafka/zookeeper.properties
+  systemd_file: /lib/systemd/system/{{zookeeper_service_name}}.service
+  systemd_override: /etc/systemd/system/{{zookeeper_service_name}}.service.d/override.conf
+  log_path: /data01/zookeeper/log
+  log_name: zookeeper-server.log
+  max_log_files: 10
+  log_file_size: 100MB
+  dataDir: /data01/zookeeper/data
+  log4j_file: /etc/kafka/zookeeper_log4j.properties
+  properties:
+    #maxClientCnxns: 0
+    initLimit: 5
+    syncLimit: 2
+    autopurge.snapRetainCount: 3
+    autopurge.purgeInterval: 24
+    #admin.enableServer: "false"
+    clientPort: 2181
+    4lw.commands.whitelist: "*"
+    tickTime: 2000
+
+rbac_enabled: false
+confluent_cli_download_enabled: "{{rbac_enabled}}"
+confluent_cli_path: /usr/local/bin/confluent
+
+custom_log4j: true
+zookeeper_custom_log4j: "{{ custom_log4j }}"
+
+zookeeper_java_args:
+  - "{% if zookeeper_custom_log4j|bool %}-Dlog4j.configuration=file:{{zookeeper.log4j_file}}{% endif %}"
+
+zookeeper_custom_java_args: ""
+zookeeper_final_java_args: "{{ zookeeper_java_args + [ zookeeper_custom_java_args ] }}"
+
+zookeeper_service_overrides:
+  LimitNOFILE: 100000
+  User: "{{zookeeper_user}}"
+  Group: "{{zookeeper_group}}"
+zookeeper_service_environment_overrides:
+  KAFKA_HEAP_OPTS: "-Xmx8g"
+  KAFKA_OPTS: "{{ zookeeper_final_java_args }}"
+
+zookeeper_current_node_hostname: "{{ inventory_hostname }}"
+zookeeper_peer_port: 2888
+zookeeper_leader_port: 3888

@@ -1,0 +1,40 @@
+---
+- import_tasks: java11.yml
+  tags:
+    - trino_java
+    - trino
+  when: trino_setup_java is true
+
+- import_tasks: user.yml
+  tags:
+    - trino_user
+    - trino
+
+- import_tasks: base.yml
+  tags:
+    - trino_base
+    - trino
+
+- import_tasks: config.yml
+  tags:
+    - trino_base
+    - trino_config
+    - trino
+
+- import_tasks: check-api.yaml
+  tags:
+    - trino_base
+    - trino_config
+    - trino_check_api
+    - trino
+
+- import_tasks: integrate-ranger.yaml
+  when: trino_ranger_plugin is defined
+  tags:
+    - trino
+    - trino_ranger_plugin
+
+- import_tasks: add-catalog.yaml
+  tags:
+    - trino
+    - trino_add_catalog

@@ -1,0 +1,265 @@
+all:
+  hosts:
+    dev-namenode:
+      ansible_host: 10.10.10.36
+      rack: /fnx/rack01
+
+    dev-snamenode:
+      ansible_host: 10.10.10.37
+      rack: /fnx/rack02
+
+    dev-datanode01:
+      ansible_host: 10.10.10.38
+      rack: /fnx/rack01
+      mysql_master: 10.10.10.38
+      mysql_id: 10101038
+
+    dev-datanode02:
+      ansible_host: 10.10.10.39
+      rack: /fnx/rack01
+      redis_master: 10.10.10.39
+      redis_sentinel: True
+
+    dev-datanode03:
+      ansible_host: 10.10.10.40
+      rack: /fnx/rack01
+      rm_name: rm1
+      jh_name: jh1
+      redis_slave: 10.10.10.40
+      redis_sentinel: True
+
+    dev-datanode04:
+      ansible_host: 10.10.10.41
+      rm_name: rm2
+      jh_name: jh2
+      rack: /fnx/rack02
+      redis_slave: 10.10.10.41
+      redis_sentinel: True
+
+    dev-datanode05:
+      ansible_host: 10.10.10.42
+      rack: /fnx/rack02
+      rm_name: rm3
+      jh_name: jh3
+      hbase_master: yes
+
+    dev-datanode06:
+      ansible_host: 10.10.10.43
+      rack: /fnx/rack02
+      mysql_slave: 10.10.10.43
+      mysql_id: 10101043
+      hbase_backup: yes
+
+
+hadoop_cluster:
+  children:
+    hadoop_data_node:
+      hosts:
+        dev-namenode:
+        dev-snamenode:
+        dev-datanode01:
+        dev-datanode02:
+        dev-datanode03:
+        dev-datanode04:
+        dev-datanode05:
+        dev-datanode06:
+    hadoop_master_node:
+      hosts:
+        dev-namenode:
+        dev-snamenode:
+    hadoop_journal_node:
+      hosts:
+        dev-datanode01:
+        dev-datanode02:
+        dev-datanode03:
+    zookeeper_node:
+      hosts:
+        dev-datanode01:
+        dev-datanode02:
+        dev-datanode03:
+    kafka_node:
+      hosts:
+        dev-datanode01:
+        dev-datanode02:
+        dev-datanode03:
+
+resourcemanager_node:
+  hosts:
+    dev-datanode03:
+    dev-datanode04:
+    dev-datanode05:
+nodemanager_node:
+  hosts:
+    hadoop_data_node:
+jobhistory_node:
+  hosts:
+    dev-datanode03:
+    dev-datanode04:
+    dev-datanode05:
+
+dfs_decommision_nodes:
+  hosts:
+yarn_decommision_nodes:
+  hosts:
+dfs_recommision_nodes:
+  hosts:
+yarn_recommision_nodes:
+  hosts:
+
+spark_nodes:
+  children:
+    spark_history_server:
+      hosts:
+        dev-datanode05:
+    spark_agents:
+      hosts:
+        dev-namenode:
+        dev-snamenode:
+        dev-datanode01:
+        dev-datanode02:
+        dev-datanode03:
+        dev-datanode04:
+        dev-datanode05:
+        dev-datanode06:
+
+mysql_nodes:
+  hosts:
+    dev-datanode01:
+    dev-datanode06:
+
+hive_nodes:
+  hosts:
+    dev-datanode03:
+    dev-datanode04:
+
+hbase_nodes:
+  children:
+    hbase_master_nodes:
+      hosts:
+        dev-datanode01:
+        dev-datanode02:
+    hbase_regionserver_nodes:
+      hosts:
+        dev-datanode01:
+        dev-datanode02:
+        dev-datanode03:
+        dev-datanode04:
+        dev-datanode05:
+        dev-datanode06:
+
+redis_nodes:
+  children:
+    redis_master_nodes:
+      hosts:
+        dev-namenode:
+    redis_slave_nodes:
+      hosts:
+        dev-snamenode:
+        dev-datanode01:
+
+haproxy_nodes:
+  hosts:
+    dev-namenode:
+    dev-snamenode:
+    dev-datanode01:
+
+postgres_nodes:
+  children:
+    postgres_master_nodes:
+      hosts:
+        dev-datanode05:
+    postgres_slave_nodes:
+      hosts:
+
+superset_nodes:
+  children:
+    superset_frontend:
+      hosts:
+        dev-datanode01:
+        dev-datanode02:
+    superset_worker:
+      hosts:
+        dev-datanode02:
+        dev-datanode03:
+        dev-datanode04:
+        dev-datanode05:
+        dev-datanode06:
+    superset_beat:
+      hosts:
+        dev-datanode02:
+        dev-datanode03:
+        dev-datanode04:
+        dev-datanode05:
+        dev-datanode06:
+
+trino_nodes:
+  children:
+    trino_coordinator:
+      hosts:
+        dev-datanode01:
+        dev-datanode02:
+    trino_worker:
+      hosts:
+        dev-datanode02:
+        dev-datanode03:
+        dev-datanode04:
+        dev-datanode05:
+        dev-datanode06:
+
+ranger_nodes:
+  children:
+    ranger_admin:
+      hosts:
+        dev-namenode:
+
+elasticsearch:
+  children:
+    es_master:
+      hosts:
+        dev-datanode02:
+        dev-datanode03:
+        dev-datanode04:
+    es_data:
+      hosts:
+        dev-datanode04:
+        dev-datanode03:
+        dev-datanode05:
+    es_ingest:
+      hosts:
+        dev-datanode04:
+        dev-datanode05:
+        dev-datanode06:
+
+kibana:
+  hosts:
+    dev-datanode03:
+
+sqoop:
+  children:
+    sqoop_nodes:
+      hosts:
+        dev-namenode:
+        dev-snamenode:
+        dev-datanode01:
+        dev-datanode02:
+        dev-datanode03:
+        dev-datanode04:
+        dev-datanode05:
+        dev-datanode06:
+
+flink_nodes:
+  hosts:
+    dev-datanode02:
+
+kudu_nodes:
+  children:
+    kudu_master_nodes:
+      hosts:
+        dev-datanode01:
+        dev-datanode02:
+        dev-datanode03:
+    kudu_tserver_nodes:
+      hosts:
+        dev-datanode04:
+        dev-datanode05:
+        dev-datanode06:

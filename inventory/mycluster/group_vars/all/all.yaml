@@ -1,0 +1,33 @@
+---
+## Root data dir where will install any component
+datalandfill_version: v0.0.1
+datalandfill_root_dir: "/opt/datalandfill-{{ datalandfill_version }}"
+datalandfill_soft_link: "/opt/datalandfill"
+datalandfill_data_dir: /data01
+datalandfill_security_mode: false
+hadoop_group: hadoop
+# datalandfill_java_version: jdk1.8.0_301
+datalandfill_java_version: jdk1.8.0_221
+datalandfill_timezone: Asia/Ho_Chi_Minh
+datalandfill_repo_url: https://repo.diteso.space/datalandfill/{{datalandfill_version}}
+hadoop_version: 3.3.1
+spark_version: 3.1.2
+hive_version: 3.1.2
+hbase_version: 2.4.8
+superset_version: 1.5.0
+trino_version: 367
+es_version: 7.9.3
+kibana_version: 7.9.3
+ranger_version: 2.1.0
+sqoop_version: 1.4.7
+flink_version: 1.14.4
+kudu_version: 1.16.0
+mysql_connector_version: 5.1.46
+datalandfill_java_home: /usr/lib/jvm/{{datalandfill_java_version}}
+zookeeper_client_port: 2181
+mysql_connector_url: "{{datalandfill_repo_url}}/mysql/mysql-connector-java-{{mysql_connector_version}}-bin.jar"
+
+confluent_repo_version: 5.5
+confluent_package_version: 5.5.4
+confluent_full_package_version: "{{ confluent_package_version + '-1' }}"
+confluent_package_debian_suffix: "{{ '=' + confluent_full_package_version if confluent_full_package_version != '' else ''}}"

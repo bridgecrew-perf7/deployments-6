@@ -1,0 +1,29 @@
+# Installation
+sqoop_on_hadoop: true
+sqoop_source_hadoop_file: "sqoop-{{ sqoop_version }}.bin__hadoop-{{ sqoop_hadoop_version }}.tar.gz"
+sqoop_source_bin_file: "{{ sqoop_version }}/sqoop-{{ sqoop_version }}.tar.gz"
+sqoop_common_lang_file: commons-lang-2.6-bin.tar.gz
+sqoop_source_hadoop_url: "{{datalandfill_repo_url}}/sqoop/{{ sqoop_version }}/{{sqoop_source_hadoop_file}}"
+sqoop_source_bin_url: "{{datalandfill_repo_url}}/sqoop/{{sqoop_source_bin_file}}"
+sqoop_common_lang_url: "https://dlcdn.apache.org/commons/lang/binaries/{{sqoop_common_lang_file}}"
+
+sqoop_hosts: "{{ groups.sqoop_nodes }}"
+sqoop_user_home: "/home/{{sqoop_user}}"
+sqoop_install_dir: "{{ datalandfill_root_dir }}/sqoop"
+sqoop_conf_dir: "{{sqoop_install_dir}}/conf"
+sqoop_bin_dir: "{{sqoop_install_dir}}/bin"
+sqoop_lib_dir: "{{sqoop_install_dir}}/lib"
+sqoop_log_dir: /var/log/sqoop
+sqoop_tmp_dir: /tmp/sqoop
+sqoop_hdfs_dir: /user/sqoop/warehouse
+sqoop_authenticate: True
+sqoop_user: sqoop
+
+sqoop_hadoop_version: 2.6.0
+
+sqoop_hadoop_common_home: "{{hadoop_install_dir}}"
+sqoop_hadoop_mapred_home: "{{hadoop_install_dir}}"
+sqoop_hadoop_hbase_home: ""
+sqoop_hadoop_hive_home: ""
+sqoop_zookeeper_dir: "/sqoop"
+

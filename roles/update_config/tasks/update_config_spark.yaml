@@ -1,0 +1,25 @@
+---
+- name: Configure {{item}}
+  template:
+    src: "../spark/templates/{{item}}.j2"
+    dest: "{{spark_conf_dir}}/{{item}}"
+    owner: "{{spark_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+  with_items:
+    - spark-defaults.conf
+    - log4j.properties
+  when: inventory_hostname in spark_hosts
+  tags:
+    - spark-config
+
+- name: Configure spark-site.xml
+  template:
+    src: ../hive/templates/spark-site.xml.j2
+    dest: "{{spark_conf_dir}}/spark-site.xml"
+    owner: "{{spark_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+  tags:
+    - spark-config
+  when: inventory_hostname in spark_hosts

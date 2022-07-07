@@ -1,0 +1,17 @@
+[Unit]
+Description=kudu-{{ program }}
+Wants=network-online.target
+
+[Service]
+Type=forking
+User={{kudu_user}}
+Group={{hadoop_group}}
+Type=simple
+Restart=on-failure
+TimeoutStartSec=2min
+TimeoutSec=5
+Environment=KUDU_HOME=/usr/lib/kudu
+ExecStart=/usr/lib/kudu/sbin/kudu-{{ program }} {{ program }} run --flagfile=/etc/kudu/conf/{{ program }}.gflagfile
+
+[Install]
+WantedBy=multi-user.target

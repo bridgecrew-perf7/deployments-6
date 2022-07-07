@@ -1,0 +1,12 @@
+---
+- include: base.yaml
+  tags: es_base
+  when: inventory_hostname in groups.elasticsearch
+
+- include: config.yaml
+  tags: es_config
+  when: inventory_hostname in groups.elasticsearch
+
+- include: check-api.yaml
+  tags: es_check_api
+  when: inventory_hostname in groups.elasticsearch

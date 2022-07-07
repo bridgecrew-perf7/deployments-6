@@ -1,0 +1,68 @@
+---
+- name: Remove decommission nodes list out of hdfs-exclude file
+  template:
+    src: ../hadoop/templates/dfs.hosts.exclude.j2
+    dest: "{{ hadoop_conf_dir }}/dfs.hosts.exclude"
+  when: hadoop_dfs_hosts_exclude is false
+
+- name: Add decommission nodes to yarn-exclude file
+  template:
+    src: ../hadoop/templates/yarn.hosts.exclude.j2
+    dest: "{{ hadoop_conf_dir }}/yarn.hosts.exclude"
+    owner: "{{hadoop_user}}"
+    group: "{{hadoop_group}}"
+  when: hadoop_yarn_hosts_exclude is false
+
+- name: Refresh yarn node
+  command: bash -lc "./yarn rmadmin -refreshNodes"
+  args:
+    chdir: "{{ hadoop_bin_dir }}"
+  become: true
+  become_user: "{{hadoop_user}}"
+  when: inventory_hostname == hadoop_resourcemanagers[1]
+
+- name: Refresh namenode
+  command: bash -lc "./hdfs dfsadmin -refreshNodes"
+  args:
+    chdir: "{{ hadoop_bin_dir }}"
+  become: true
+  become_user: "{{hadoop_user}}"
+  when: inventory_hostname == hadoop_namenodes[0]
+
+- name: Start yarn-nodemanager
+  service: 
+    name: yarn-nodemanager 
+    state: started
+  when:
+    - inventory_hostname in groups.yarn_recommision_nodes
+    - hadoop_ansible_handlers|bool
+
+- name: Start hadoop-datanode
+  service: 
+    name: hdfs-datanode 
+    state: started
+  when:
+    - inventory_hostname in groups.dfs_recommision_nodes
+    - hadoop_ansible_handlers|bool
+
+- name: Check the HDFS status of the decommissioning
+  command: bash -lc "./hdfs dfsadmin -report"
+  args:
+    chdir: "{{ hadoop_bin_dir }}"
+  become: true
+  become_user: "{{hadoop_user}}"
+  register: recommission_result
+  when: inventory_hostname == hadoop_namenodes[0]
+
+- name: Output from recommissioning
+  debug:
+    msg: "{{ recommission_result.stdout_lines }}"
+  when: inventory_hostname == hadoop_namenodes[0]
+
+- name: Rebalance HDFS
+  command: bash -lc "./hdfs balancer -Ddfs.datanode.balance.bandwidthPerSec=1000m -Ddfs.balancer.movedWinWidth=10800000 -Ddfs.balancer.moverThreads=3000 -Ddfs.datanode.balance.max.concurrent.moves=200 -Ddfs.balancer.max-size-to-move=20737418240"
+  args:
+    chdir: "{{ hadoop_bin_dir }}"
+  become: true
+  become_user: "{{hadoop_user}}"
+  when: inventory_hostname == hadoop_namenodes[0]

@@ -1,0 +1,6 @@
+.idea/
+roles/trino/templates/etc/ad.crt
+inventory/mycluster/testing_hosts.yaml
+inventory/mycluster/testing_hosts.ini
+inventory/mycluster/testing_ganglia.ini
+inventory/mycluster/quyetmv_host.yaml

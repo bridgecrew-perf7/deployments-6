@@ -1,0 +1,21 @@
+---
+- import_tasks: user.yml
+  tags:
+    - hive_user
+    - hive
+
+- import_tasks: base.yml
+  tags:
+    - hive_base
+    - hive
+
+- import_tasks: config.yml
+  tags:
+    - hive_base
+    - hive_config
+    - hive
+
+- import_tasks: init_metastore.yml
+  tags:
+    - hive_init_metastore
+    - hive

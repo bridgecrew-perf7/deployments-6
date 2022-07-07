@@ -1,0 +1,128 @@
+---
+- name: Create {{spark_install_dir}}
+  file:
+    path: "{{spark_install_dir}}"
+    state: directory
+    owner: "{{spark_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in spark_hosts
+
+- name: Download Spark .tgz to {{datalandfill_root_dir}}
+  get_url:
+    url: "{{spark_download_url}}"
+    dest: "{{datalandfill_root_dir}}/spark-{{spark_version}}-bin-{{spark_hadoop_version}}.tgz"
+    validate_certs: no
+  when: inventory_hostname in spark_hosts
+
+- name: Unarchive downloaded Spark
+  unarchive:
+    src: "{{datalandfill_root_dir}}/spark-{{spark_version}}-bin-{{spark_hadoop_version}}.tgz"
+    dest: "{{spark_install_dir}}"
+    owner: "{{spark_user}}"
+    group: "{{hadoop_group}}"
+    remote_src: yes
+    mode: 0755
+    extra_opts: [--strip-components=1]
+  when: inventory_hostname in spark_hosts
+
+- name: Remove {{datalandfill_root_dir}}/spark-{{spark_version}}-bin-{{spark_hadoop_version}}.tgz
+  file:
+    path: "{{datalandfill_root_dir}}/spark-{{spark_version}}-bin-{{spark_hadoop_version}}.tgz"
+    state: absent
+  when: inventory_hostname in spark_hosts
+
+- name: Create folder /etc/spark
+  file:
+    path: /etc/spark
+    state: directory
+    owner: "{{spark_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in spark_hosts
+
+- name: Create spark link for conf to /etc/spark
+  file:
+    src: "{{spark_conf_dir}}"
+    dest: /etc/spark/conf
+    owner: "{{spark_user}}"
+    group: "{{hadoop_group}}"
+    state: link
+  when: inventory_hostname in spark_hosts
+
+- name: Create link for {{item}} to /usr/local/bin
+  file:
+    src: "{{spark_bin_dir}}/{{item}}"
+    dest: "/usr/local/bin/{{item}}"
+    owner: "{{spark_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+    state: link
+  when: inventory_hostname in spark_hosts
+  with_items:
+    - spark-shell
+    - spark-submit
+
+- name: Export spark variables
+  copy:
+    content: "export HADOOP_HOME={{hadoop_install_dir}}\nexport HADOOP_CONF_DIR={{hadoop_conf_dir}}\nexport HADOOP_LIBEXEC_DIR={{hadoop_install_dir}}/libexec\nexport HADOOP_CLASSPATH=`/usr/local/bin/hadoop classpath`\nexport JAVA_HOME={{datalandfill_java_home}}\nexport PATH=$PATH:$JAVA_HOME/bin\nexport SPARK_HOME={{spark_install_dir}}\nexport LD_LIBRARY_PATH={{hadoop_install_dir}}/lib/native:$LD_LIBRARY_PATH"
+    dest: "/etc/profile.d/spark_exports.sh"
+    mode: 0755
+  when: inventory_hostname in spark_hosts
+
+- name: Allow spark variables keeping for sudoers
+  template:
+    src: spark_sudoers.j2
+    dest: /etc/sudoers.d/spark
+    owner: root
+    group: root
+    mode: 0644
+  when: inventory_hostname in spark_hosts
+
+- name: Create spark tmp dir
+  file:
+    path: "{{spark_tmp_dir}}"
+    state: directory
+    owner: "{{spark_user}}"
+    group: "{{hadoop_group}}"
+    mode: 1777
+  tags:
+    - skip_ansible_lint
+  when: inventory_hostname in spark_hosts
+
+- name: Create spark log dir
+  file:
+    path: "{{spark_log_dir}}"
+    state: directory
+    owner: "{{spark_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+  when: inventory_hostname in spark_hosts
+
+- name: Create /tmp/spark-events
+  file:
+    path: /tmp/spark-events
+    state: directory
+    owner: "{{spark_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+  when: inventory_hostname in spark_hosts
+
+- name: Create Spark applicationHistory dir on hdfs
+  shell: 'su - {{hadoop_user}} -c "hdfs dfs -mkdir -p /user/{{spark_user}}/applicationHistory"'
+  when: inventory_hostname in hadoop_namenodes[0]
+
+- name: Change owner {{spark_user}} work dir on hdfs
+  shell: 'su - {{hadoop_user}} -c "hdfs dfs -chown -R {{spark_user}}:{{hadoop_group}} /user/{{spark_user}}"'
+  when: inventory_hostname in hadoop_namenodes[0]
+
+- name: Change mode {{spark_user}} work dir on hdfs
+  shell: 'su - {{hadoop_user}} -c "hdfs dfs -chmod -R 775 /user/{{spark_user}}"'
+  when: inventory_hostname in hadoop_namenodes[0]
+
+- name: Check {{spark_user}} work dir on hdfs
+  shell: 'su - {{hadoop_user}} -c "hdfs dfs -ls -h /user/{{spark_user}}"'
+  when: inventory_hostname in hadoop_namenodes[0]
+  register: spark_permission
+
+- name: print permission
+  debug: msg={{spark_permission.stdout}}
+  when: inventory_hostname in hadoop_namenodes[0]

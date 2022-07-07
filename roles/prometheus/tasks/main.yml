@@ -1,0 +1,77 @@
+---
+- name: Create Prometheus Config Directory
+  file:
+    path: "{{ prm_config_dir }}"
+    state: directory
+    group: "{{ prm_user }}"
+    owner: "{{ prm_group }}"
+    mode: 0770
+  tags:
+    - prometheus
+
+- name: Create Prometheus Data Directory
+  file:
+    path: "{{ prm_data_dir }}"
+    state: directory
+    group: "{{ prm_user }}"
+    owner: "{{ prm_group }}"
+    mode: 0770
+  tags:
+    - prometheus
+
+- name: Create Prometheus Production Config Directory
+  file:
+    path: "{{ prm_config_dir }}production"
+    state: directory
+    group: "{{ prm_user }}"
+    owner: "{{ prm_group }}"
+    mode: 0770
+  tags:
+    - prometheus
+
+# - name: Update Prometheus Config
+#   template: 
+#     src: "defaults/prometheus.yml"
+#     dest: "{{ prm_config_dir }}prometheus.yml"
+#     owner: root
+#     group: root
+#     force: "yes"
+#   tags:
+#     - prometheus
+#     - default
+
+# - name: Update SSL Config
+#   copy:
+#     src: ssl
+#     dest: "{{ prm_config_dir }}production/"
+#     mode: "u+r,g+r,o+r"
+#   tags:
+#     - ssl
+
+# - name: Create Web Config File
+#   template:
+#     src: defaults/web-config.yml.j2
+#     dest: "{{ prm_config_dir }}web-config.yml"
+#     mode: 0640
+#     owner: "root"
+#     group: "root"
+#   tags:
+#     - ssl
+
+- include_tasks: prometheus-server.yml
+  when: prm_server_enabled|bool
+  tags:
+    - prometheus
+
+# - include_tasks: endpoint.yml
+#   tags:
+#     - endpoint
+#     - node-exp
+#     - redis-exp
+#     - elasticsearch-exp
+    
+- name: Restart Prometheus
+  shell: docker kill --signal="HUP" prometheus-server
+  tags:
+    - prometheus
+    - default

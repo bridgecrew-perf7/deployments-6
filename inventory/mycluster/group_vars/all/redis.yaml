@@ -1,0 +1,73 @@
+---
+redis_slaveof: "{{ redis_master_node }}"
+redis_master_node: "{%- for host in groups.redis_nodes -%} {%- if hostvars[host]['redis_master'] is defined -%}{{ hostvars[host]['redis_master'] }}{%- endif -%} {%- endfor -%}"
+
+redis_daemon: redis
+redis_conf_path: /etc/redis/redis.conf
+redis_sentinel_daemon: redis-sentinel
+redis_sentinel_conf_path: /etc/redis/redis-sentinel.conf
+redis_vault_password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          38626163373432643331396566323139633065643366643962366631396331323937313661396331
+          6332623065386664386632663634343439623339353630340a346632303064363031303463376431
+          33306162666635643436326337616163656431383163666366663334646661336462363166313832
+          3036333137313639350a373832356637376135656338623131313937393633616638616339373966
+          32643035306534633164393365666166616236626130323834313532306364313533656534323862
+          6166313932633333303839626230343437353330306135353138
+          
+redis_port: 6379
+redis_bind_interface: 0.0.0.0
+redis_unixsocket: ''
+redis_timeout: 300
+
+redis_loglevel: "notice"
+redis_logfile: /var/log/redis/redis-server.log
+
+redis_databases: 16
+
+# Set to an empty set to disable persistence (saving the DB to disk).
+redis_save:
+  - 900 1
+  - 300 10
+  - 60 10000
+
+redis_rdbcompression: "yes"
+redis_dbfilename: dump.rdb
+redis_dbdir: /var/lib/redis
+
+redis_maxmemory: "{{ (ansible_memtotal_mb*0.6)|int|abs }}mb"
+redis_maxmemory_policy: "noeviction"
+redis_maxmemory_samples: 5
+
+redis_appendonly: "no"
+redis_appendfsync: "everysec"
+
+redis_requirepass: true
+redis_pass: "{{ redis_vault_password }}"
+
+# Add extra include files for local configuration/overrides.
+redis_includes: []
+
+# Redis replication
+redis_slave_read_only: "yes"
+redis_slave_priority: 100
+redis_repl_backlog_size: false
+
+# Redis sentinel
+redis_sentinel_master_host: 0.0.0.0
+redis_sentinel: false
+redis_sentinel_dir: /tmp
+redis_sentinel_logfile: /var/log/redis/sentinel.log
+redis_sentinel_port: 26379
+redis_sentinel_bind: 0.0.0.0
+redis_sentinel_monitors:
+  - name: redis-cluster
+    host: "{{ redis_sentinel_master_host }}"
+    port: 6379
+    quorum: 2
+    auth_pass: "{{ redis_vault_password }}"
+    down_after_milliseconds: 30000
+    parallel_syncs: 1
+    failover_timeout: 180000
+    notification_script: false
+    client_reconfig_script: false

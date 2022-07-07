@@ -1,0 +1,75 @@
+spark.master=yarn
+spark.driver.memory=512m
+spark.yarn.am.memory=512m
+spark.executor.memory=512m
+spark.eventLog.enabled=true
+spark.io.encryption.enabled=false
+spark.network.crypto.enabled=false
+spark.eventLog.dir=hdfs://{{hadoop_nameservices}}/user/spark/applicationHistory
+spark.history.provider=org.apache.spark.deploy.history.FsHistoryProvider
+spark.history.fs.logDirectory=hdfs://{{hadoop_nameservices}}/user/spark/applicationHistory
+spark.yarn.historyServer.address=http://{{spark_history_server[0]}}:{{spark_history_ui_port}}
+spark.history.fs.update.interval=10s
+spark.history.ui.port={{spark_history_ui_port}}
+spark.sql.warehouse.dir={{hive_hdfs_dir}}
+spark.yarn.app.container.log.dir=hdfs://{{hadoop_nameservices}}/user/spark/applicationHistory
+
+# Dynamic allocation on YARN
+
+spark.dynamicAllocation.enabled=true
+spark.dynamicAllocation.minExecutors=0
+spark.dynamicAllocation.schedulerBacklogTimeout=1
+spark.dynamicAllocation.executorIdleTimeout=60
+spark.yarn.historyServer.allowTracking=true
+
+spark.shuffle.service.enabled=true
+spark.shuffle.service.port=7337
+
+spark.driver.log.dfsDir=/user/spark/driverLogs
+spark.driver.log.persistToDfs.enabled=true
+spark.serializer=org.apache.spark.serializer.KryoSerializer
+spark.ui.enabled=true
+spark.ui.killEnabled=true
+spark.lineage.log.dir=/var/log/spark/lineage
+spark.lineage.enabled=true
+
+spark.history.fs.cleaner.enabled=true
+spark.history.fs.cleaner.interval=86400
+spark.history.fs.cleaner.maxAge=604800
+spark.history.fs.update.interval=10s
+spark.history.retainedApplications=50
+spark.history.store.maxDiskUsage=10737418240
+spark.history.ui.admin.acls=
+spark.port.maxRetries=0
+spark.ui.filters=org.apache.spark.deploy.yarn.YarnProxyRedirectFilter
+
+#spark.executor.cores=2
+# spark.executor.memory=4655m
+# spark.executor.memoryOverhead=465
+
+# Overkill
+# spark.yarn.am.memory=4655m
+# spark.yarn.am.memoryOverhead=465
+
+# spark.driver.memory=3768m
+# spark.driver.maxResultSize=1884m
+# spark.rpc.message.maxSize=512
+
+# Add ALPN for Bigtable
+# spark.driver.extraJavaOptions
+# spark.executor.extraJavaOptions
+
+# Disable Parquet metadata caching as its URI re-encoding logic does
+# not work for GCS URIs (b/28306549). The net effect of this is that
+# Parquet metadata will be read both driver side and executor side.
+#spark.sql.parquet.cacheMetadata=false
+
+# User-supplied properties.
+#Mon Jul 24 23:12:12 UTC 2017
+# spark.executor.cores=4
+# spark.executor.memory=18619m
+# spark.driver.memory=3840m
+# spark.driver.maxResultSize=1920m
+# spark.yarn.am.memory=640m
+# spark.executorEnv.PYTHONHASHSEED=0
+

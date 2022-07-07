@@ -1,0 +1,87 @@
+---
+- name: Open INPUT zookeeper connection 
+  iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: "{{item}}"
+    jump: ACCEPT
+    action: insert
+    comment: "ALLOW zookeeper"
+  with_items:
+    - "2181"
+    - "2888"
+    - "3888" 
+
+- name: Open OUTPUT zookeeper connection 
+  iptables:
+    chain: OUTPUT
+    protocol: tcp
+    destination_port: "{{item}}"
+    jump: ACCEPT
+    action: insert
+    comment: "ALLOW zookeeper"
+  with_items:
+    - "2181"
+    - "2888"
+    - "3888" 
+
+- name: Persisten iptables rule
+  shell: iptables-save > /etc/iptables/rules.v4
+  when: ansible_os_family == "Debian"
+  ignore_errors: yes
+
+- name: Add Confluent Apt Key
+  apt_key:
+    url: "{{confluent_repository_debian_key_url}}"
+    state: present
+
+- name: Add Confluent Apt Repo
+  apt_repository:
+    repo: "{{confluent_repository_debian_repository}}"
+    state: present
+
+- name: Install the Zookeeper Packages
+  apt:
+    name: "{{item}}{{confluent_package_debian_suffix}}"
+  loop: "{{zookeeper_packages}}"
+  when: ansible_os_family == "Debian"
+
+# Configure environment
+- name: Create Zookeeper Group
+  group:
+    name: "{{zookeeper_group}}"
+
+- name: Create Zookeeper User
+  user:
+    name: "{{zookeeper_user}}"
+    comment: "Zookeeper User"
+    system: true
+    group: "{{zookeeper_group}}"
+
+- name: update ~/.bashrc
+  template:
+    src: bashrc.j2
+    dest: "{{ zookeeper_user_home }}/.bashrc"
+
+- name: Create Zookeeper dataDir ownership
+  file:
+    path: "{{zookeeper.dataDir}}"
+    owner: "{{zookeeper_user}}"
+    group: "{{zookeeper_group}}"
+    state: directory
+    mode: 0770
+
+- name: Set Ownership of Data Dir files
+  file:
+    path: "{{zookeeper.dataDir}}"
+    owner: "{{zookeeper_user}}"
+    group: "{{zookeeper_group}}"
+    recurse: true
+
+- name: Create Log Directory
+  file:
+    path: "{{zookeeper.log_path}}"
+    state: directory
+    group: "{{zookeeper_group}}"
+    owner: "{{zookeeper_user}}"
+    mode: 0770

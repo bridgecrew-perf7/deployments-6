@@ -1,0 +1,6 @@
+---
+- hosts: trino_nodes
+  become: yes
+  remote_user: quyetmv
+  roles:
+    - trino

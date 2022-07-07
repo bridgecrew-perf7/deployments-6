@@ -1,0 +1,43 @@
+- name: Start trino-coordinator
+  service:
+    name: trino-coordinator
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  when: inventory_hostname in groups.trino_coordinator
+
+- name: Stop trino-coordinator
+  service:
+    name: trino-coordinator
+    state: stopped
+    enabled: no
+  when: inventory_hostname in groups.trino_coordinator
+
+- name: Restart trino-coordinator
+  service:
+    name: trino-coordinator
+    state: restarted
+    enabled: yes
+  when: inventory_hostname in groups.trino_coordinator
+
+- name: Start trino-worker
+  service:
+    name: trino-worker
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  when: inventory_hostname in groups.trino_worker
+
+- name: Stop trino-worker
+  service:
+    name: trino-worker
+    state: stopped
+    enabled: no
+  when: inventory_hostname in groups.trino_worker
+
+- name: Restart trino-worker
+  service:
+    name: trino-worker
+    state: restarted
+    enabled: yes
+  when: inventory_hostname in groups.trino_worker

@@ -1,0 +1,26 @@
+---
+- name: Create user on all machines
+  user:
+    name: "{{sqoop_user}}"
+    comment: "sqoop superuser"
+    group: "{{hadoop_group}}"
+    groups: sudo
+    home: "{{ sqoop_user_home }}"
+    createhome: yes
+    shell: /bin/bash
+  register: created_user
+
+- name: update ~/.bashrc
+  template:
+    src: bashrc.j2
+    dest: "{{ sqoop_user_home }}/.bashrc"
+  when: inventory_hostname in sqoop_hosts
+
+- name: Allow sqoop variables keeping for sudoers
+  template:
+    src: sqoop_sudoers.j2
+    dest: /etc/sudoers.d/sqoop
+    owner: root
+    group: root
+    mode: 0644
+  when: inventory_hostname in sqoop_hosts

@@ -1,0 +1,7 @@
+---
+- hosts: sqoop_nodes
+  become: yes
+  remote_user: quyetmv
+  gather_facts: yes
+  roles:
+    - sqoop

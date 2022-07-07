@@ -1,0 +1,25 @@
+---
+superset_env: development
+superset_install_dir: "{{ datalandfill_root_dir }}/superset"
+superset_conf_dir: "{{superset_install_dir}}/conf"
+superset_database_host: "{{ hostvars[groups.postgres_master_nodes[0]]['ansible_host'] }}"
+superset_database_port: 5432
+superset_database_user: superset
+superset_database_pass: Superset@123
+superset_database_name: superset
+superset_redis_host: "{{haproxy_vip_host}}"
+superset_redis_port: "{{haproxy_redis_ha_port}}"
+superset_redis_db: 1
+superset_smtp_host: smtp.test.com
+superset_smtp_starttls: false
+superset_smtp_ssl: true
+superset_smtp_user: quyetmv
+superset_smtp_port: 465
+superset_smtp_password: fdfdfd
+superset_smtp_mail_from: quyetmv@test.com
+superset_webdriver_baseurl: "http://{{haproxy_vip_host}}:{{haproxy_superset_ha_port}}"
+superset_webdriver_baseurl_user_friendly: "https://superset.dtesolab.com"
+superset_report_webdriver: chrome
+superset_webserver_port: 8099
+superset_config_path: /etc/superset/superset_config.py
+superset_init: false

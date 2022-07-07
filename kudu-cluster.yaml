@@ -1,0 +1,8 @@
+---
+- hosts: kudu_nodes
+  become: yes
+  remote_user: quyetmv
+  gather_facts: yes
+  strategy: linear
+  roles:
+    - kudu

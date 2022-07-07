@@ -1,0 +1,157 @@
+---
+
+
+# - name: Download kudu .deb to /tmp
+#   get_url:
+#     url: "{{kudu_download_url}}/kudu_{{kudu_version}}_amd64.deb"
+#     dest: "/tmp/kudu_{{kudu_version}}_amd64.deb"
+#     validate_certs: no
+#   when: inventory_hostname in kudu_hosts
+
+# - name: Download kudu .deb to /tmp
+#   get_url:
+#     url: "{{kudu_download_url}}/kudu-master_{{kudu_version}}_amd64.deb"
+#     dest: "/tmp/kudu-master_{{kudu_version}}_amd64.deb"
+#     validate_certs: no
+#   when: inventory_hostname in groups.kudu_master_nodes
+
+# - name: Download kudu .deb to /tmp
+#   get_url:
+#     url: "{{kudu_download_url}}/kudu-tserver_{{kudu_version}}_amd64.deb"
+#     dest: "/tmp/kudu-tserver_{{kudu_version}}_amd64.deb"
+#     validate_certs: no
+#   when: inventory_hostname in groups.kudu_tserver_nodes
+
+# - name: Install kudu
+#   command: "dpkg -i /tmp/kudu_{{kudu_version}}_amd64.deb"
+#   when: inventory_hostname in kudu_hosts
+
+# - name: Install kudu-master
+#   command: "dpkg -i /tmp/kudu-master_{{kudu_version}}_amd64.deb"
+#   when: inventory_hostname in groups.kudu_master_nodes
+
+# - name: Install kudu-tserver
+#   command: "dpkg -i /tmp/kudu-tserver_{{kudu_version}}_amd64.deb"
+#   when: inventory_hostname in groups.kudu_tserver_nodes
+
+- name: stop kudu master
+  shell: systemctl stop kudu-master
+  when: inventory_hostname in groups.kudu_master_nodes
+
+- name: stop kudu tserver
+  shell: systemctl stop kudu-tserver
+  when: inventory_hostname in groups.kudu_tserver_nodes
+
+- name: Make sure {{kudu_install_dir}} exist
+  file:
+    path: "{{kudu_install_dir}}"
+    state: directory
+    owner: "{{kudu_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in kudu_hosts
+
+- name: Make sure {{kudu_conf_dir}} exist
+  file:
+    path: "{{kudu_conf_dir}}"
+    state: directory
+    owner: "{{kudu_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in kudu_hosts
+
+- name: Make sure {{kudu_data_dir}} exist
+  file:
+    path: "{{kudu_data_dir}}"
+    state: directory
+    owner: "{{kudu_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in kudu_hosts
+
+- name: Make sure {{kudu_master_data_dir}} exist
+  file:
+    path: "{{kudu_master_data_dir}}"
+    state: directory
+    owner: "{{kudu_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in groups.kudu_master_nodes
+
+- name: Make sure {{kudu_master_wal_dir}} exist
+  file:
+    path: "{{kudu_master_wal_dir}}"
+    state: directory
+    owner: "{{kudu_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in groups.kudu_master_nodes
+
+- name: Make sure {{kudu_master_wal_dir}} exist
+  file:
+    path: "{{kudu_master_wal_dir}}"
+    state: directory
+    owner: "{{kudu_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in groups.kudu_master_nodes
+
+- name: Make sure {{kudu_master_heap_profile_path}} exist
+  file:
+    path: "{{kudu_master_heap_profile_path}}"
+    state: directory
+    owner: "{{kudu_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in groups.kudu_master_nodes
+
+- name: Make sure {{kudu_log_dir}}/master exist
+  file:
+    path: "{{kudu_log_dir}}/master"
+    state: directory
+    owner: "{{kudu_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in groups.kudu_master_nodes
+
+- name: Make sure {{kudu_tserver_data_dir}} exist
+  file:
+    path: "{{kudu_tserver_data_dir}}"
+    state: directory
+    owner: "{{kudu_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in groups.kudu_tserver_nodes
+
+- name: Make sure {{kudu_tserver_wal_dir}} exist
+  file:
+    path: "{{kudu_tserver_wal_dir}}"
+    state: directory
+    owner: "{{kudu_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in groups.kudu_tserver_nodes
+
+- name: Make sure {{kudu_tserver_heap_profile_path}} exist
+  file:
+    path: "{{kudu_tserver_heap_profile_path}}"
+    state: directory
+    owner: "{{kudu_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in groups.kudu_tserver_nodes
+
+- name: Make sure {{kudu_log_dir}}/tserver exist
+  file:
+    path: "{{kudu_log_dir}}/tserver"
+    state: directory
+    owner: "{{kudu_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in groups.kudu_tserver_nodes
+
+- name: Make sure folder /etc/kudu
+  file:
+    path: /etc/kudu
+    state: directory
+    owner: "{{kudu_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in kudu_hosts
+
+- name: Allow kudu variables keeping for sudoers
+  template:
+    src: kudu_sudoers.j2
+    dest: /etc/sudoers.d/kudu
+    owner: root
+    group: root
+    mode: 0644
+  when: inventory_hostname in kudu_hosts
+

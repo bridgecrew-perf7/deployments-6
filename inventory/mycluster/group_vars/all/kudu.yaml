@@ -1,0 +1,21 @@
+---
+## kudu's configuration will define here.
+kudu_hosts: "{{ groups.kudu_nodes }}"
+kudu_user_home: "/home/{{kudu_user}}"
+kudu_install_dir: "{{ datalandfill_root_dir }}/kudu"
+kudu_conf_dir: "{{kudu_install_dir}}/conf"
+kudu_log_dir: /var/log/kudu
+kudu_data_dir: "{{datalandfill_data_dir}}/kudu"
+kudu_master_data_dir: "{{kudu_data_dir}}/master/data"
+kudu_master_wal_dir: "{{kudu_data_dir}}/master/wal"
+kudu_tserver_data_dir: "{{kudu_data_dir}}/tserver/data"
+kudu_tserver_wal_dir: "{{kudu_data_dir}}/tserver/wal"
+kudu_master_heap_profile_path: "{{kudu_data_dir}}/master/heap"
+kudu_tserver_heap_profile_path: "{{kudu_data_dir}}/tserver/heap"
+kudu_authenticate: True
+kudu_user: kudu
+kudu_download_url: "{{datalandfill_repo_url}}/kudu/{{kudu_version}}"
+kudu_master_port: 7051
+kudu_tserver_port: 7050
+webserver_port: 8050
+kudu_master_hosts: "{{ groups['kudu_master_nodes'] | join(':' + (kudu_master_port | string) + ',')  }}:{{ kudu_master_port | string }}"

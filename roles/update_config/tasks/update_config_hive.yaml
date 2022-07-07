@@ -1,0 +1,54 @@
+---
+
+- name: Configure {{item}}
+  template:
+    src: "../hive/templates/{{item}}.j2"
+    dest: "{{hive_conf_dir}}/{{item}}"
+    owner: "{{hive_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+  with_items:
+    - hive-env.sh
+    - hive-site.xml
+    - log4j.properties
+    - hive-metastore-jmxetric.xml
+    - hive-server2-jmxetric.xml
+  when: inventory_hostname in hive_hosts
+  tags:
+    - hive-config
+
+- name: Stop hive-metastore
+  service:
+    name: hive-metastore
+    state: stopped
+    enabled: yes
+  when: inventory_hostname in hive_hosts
+  tags:
+    - hive-config
+
+- name: Stop hiveserver2
+  service:
+    name: hiveserver2
+    state: stopped
+    enabled: yes
+  when: inventory_hostname in hive_hosts
+  tags:
+    - hive-config
+
+- name: Start hive-metastore
+  service:
+    name: hive-metastore
+    state: started
+    enabled: yes
+  when: inventory_hostname in hive_hosts
+  tags:
+    - hive-config
+
+- name: Start hiveserver2
+  service:
+    name: hiveserver2
+    state: started
+    enabled: yes
+  when: inventory_hostname in hive_hosts
+  tags:
+    - hive-config

@@ -1,0 +1,25 @@
+- name: Start kudu-master
+  service:
+    name: kudu-master
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: Stop kudu-master
+  service:
+    name: kudu-master
+    state: stopped
+    enabled: yes
+
+- name: Start kudu-tserver
+  service:
+    name: kudu-tserver
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: Stop kudu-tserver
+  service:
+    name: kudu-tserver
+    state: stopped
+    enabled: yes

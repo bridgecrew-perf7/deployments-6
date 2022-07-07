@@ -1,0 +1,31 @@
+{% for key,value in es.properties.items() %}
+{{key}}: {{value}}
+{% endfor %}
+
+node.name: {{ansible_hostname}}
+
+{% if inventory_hostname in groups['es_master'] %}
+node.master: true
+{% else %}
+node.master: false
+{% endif %}
+
+{% if inventory_hostname in groups['es_data'] %}
+node.data: true
+{% else %}
+node.data: false
+{% endif %}
+
+{% if inventory_hostname in groups['es_ingest'] %}
+node.ingest: true
+thread_pool.get.queue_size: 1000
+thread_pool.write.queue_size: 1000
+{% else %}
+node.ingest: false
+{% endif %}
+
+xpack.security.enabled: false
+
+network.host: 0.0.0.0
+discovery.seed_hosts: [ "{{ groups['es_master']|join('", "') }}" ]
+cluster.initial_master_nodes: [ "{{ groups['es_master']|join('", "') }}" ]

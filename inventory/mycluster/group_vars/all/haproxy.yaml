@@ -1,0 +1,14 @@
+---
+## haproxy's configuration will define here.
+haproxy_install_dir: /opt
+haproxy_user: admin
+haproxy_pass: haproxy@123
+haproxy_uri: /stats
+haproxy_es_ha_port: 29200
+haproxy_redis_ha_port: 16379
+haproxy_vip_host: 10.110.68.36
+haproxy_superset_ha_port: 28099
+haproxy_update_config: false
+haproxy_hive_thrift_ha_port: 29083
+haproxy_trino_webserver_ha_port: 28686
+haproxy_resourcemanager_ha_port: 28088

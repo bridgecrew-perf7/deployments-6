@@ -1,0 +1,6 @@
+---
+- include: install.yaml
+  when: inventory_hostname in groups.superset_nodes
+
+- include: check-api.yaml
+  when: inventory_hostname in groups.superset_frontend

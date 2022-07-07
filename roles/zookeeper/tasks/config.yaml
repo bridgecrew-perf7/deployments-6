@@ -1,0 +1,56 @@
+---
+- name: Create Zookeeper myid File
+  template:
+    src: myid.j2
+    dest: "{{zookeeper.dataDir}}/myid"
+    mode: 0555
+    owner: "{{zookeeper_user}}"
+    group: "{{zookeeper_group}}"
+
+- name: Create Zookeeper Config
+  template:
+    src: zookeeper.properties.j2
+    dest: "{{zookeeper.config_file}}"
+    mode: 0400
+    owner: "{{zookeeper_user}}"
+    group: "{{zookeeper_group}}"
+  register: zookeeper_config
+  notify: restart zookeeper
+
+- name: Create Zookeeper log4j config
+  template:
+    src: zookeeper_log4j.properties.j2
+    dest: "{{zookeeper.log4j_file}}"
+    mode: 0640
+    owner: "{{zookeeper_user}}"
+    group: "{{zookeeper_group}}"
+  notify: restart zookeeper
+
+- name: Write Service Overrides
+  template:
+    src: confluent-zookeeper.service.j2
+    dest: "{{zookeeper.systemd_file}}"
+    mode: 0640
+    owner: "{{zookeeper_user}}"
+    group: "{{zookeeper_group}}"
+  notify: restart zookeeper
+
+- name: Reload systemd daemon
+  command: "systemctl daemon-reload"
+  tags:
+    - skip_ansible_lint
+
+- name: Register Zookeeper Service
+  service:
+    name: "{{zookeeper_service_name}}"
+    enabled: yes
+
+- name: Zookeeper Service Started
+  systemd:
+    name: "{{zookeeper_service_name}}"
+    enabled: true
+    state: started
+
+- name: Zookeeper Health Check
+  include: health_check.yaml
+  when: health_checks_enabled|bool

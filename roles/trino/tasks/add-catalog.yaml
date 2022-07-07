@@ -1,0 +1,22 @@
+---
+- name: Remove old log
+  shell: rm -rf {{trino_data_dir}}/var/log/*
+  when: inventory_hostname in trino_hosts
+  
+- name: Configure trino-catalog
+  template:
+    src: "etc/catalog/{{item}}"
+    dest: "{{trino_conf_dir}}/catalog/{{item}}"
+    owner: "{{trino_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+  tags:
+    - trino-hive
+  with_items:
+    - hive.properties
+    - mysql.properties
+    - kudu.properties
+  notify: 
+    - Restart trino-worker
+    - Restart trino-coordinator
+  when: inventory_hostname in trino_hosts

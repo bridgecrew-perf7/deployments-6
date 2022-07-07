@@ -1,0 +1,128 @@
+---
+- name: Install ganglia server
+  apt: 
+    name: "{{ item }}"
+    state: present
+  when: inventory_hostname in groups.gmetad
+  with_items:
+    - gmetad
+    - ganglia-webfrontend
+  tags:
+    - gmetad
+
+- name: Copy file site default
+  template: src=000-default.conf dest=/etc/apache2/sites-available/000-default.conf owner=root group=root mode=0644
+  notify:
+    - restart apache2
+  when: inventory_hostname in groups.gmetad
+  tags:
+    - gmetad
+
+- name: Replace load_one with network_report
+  replace: >
+    dest=/usr/share/ganglia-webfrontend/conf_default.php
+    regexp='"load_one"'
+    replace='"network_report"'
+  when: inventory_hostname in groups.gmetad
+  tags:
+    - gmetad
+
+- name: Replace mem_report with network_report in meta view
+  replace: >
+    dest=/usr/share/ganglia-webfrontend/templates/default/meta_view.tpl
+    regexp='g=mem_report'
+    replace='g=network_report'
+  when: inventory_hostname in groups.gmetad
+  tags:
+    - gmetad
+
+- name: Replace load_report with cpu_report in meta view
+  replace: >
+    dest=/usr/share/ganglia-webfrontend/templates/default/meta_view.tpl
+    regexp='g=load_report'
+    replace='g=cpu_report'
+  when: inventory_hostname in groups.gmetad
+  tags:
+    - gmetad
+
+- name: Use "by name" as the default sorting method
+  replace: >
+    dest=/usr/share/ganglia-webfrontend/get_context.php
+    regexp='sort = "descending"'
+    replace='sort = "by name"'
+  when: inventory_hostname in groups.gmetad
+  tags:
+    - gmetad
+
+- name: Managerment file gmetad.conf
+  template: src=gmetad_ubuntu.conf dest=/etc/ganglia/gmetad.conf owner=root group=root mode=0644
+  notify:
+    - restart gmetad
+  when: inventory_hostname in groups.gmetad
+  tags:
+    - gmetad
+    - update_config
+
+- name: Start gmetad running
+  service: name=gmetad state=started enabled=yes
+  when: inventory_hostname in groups.gmetad
+  tags:
+    - gmetad
+
+- name: Ensure apache2 is running
+  service: name=apache2 state=started enabled=yes
+  when: inventory_hostname in groups.gmetad
+  tags:
+    - gmetad
+
+- name: Install ganglia client
+  apt: 
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - ganglia-monitor
+  when: inventory_hostname in groups.gmond
+  tags:
+    - gmond
+
+- name: Managerment file gmond.conf
+  template: src=gmond_ubuntu.conf dest=/etc/ganglia/gmond.conf owner=root group=root mode=0644
+  register: gmond
+  when: ansible_distribution_version < "21.10" and inventory_hostname in groups.gmond
+  notify:
+    - restart gmond_ubuntu
+  tags:
+    - gmond
+    - gmond_config
+
+- name: Managerment file gmond.conf
+  template: src=gmond_ubuntu-3.7.2.conf dest=/etc/ganglia/gmond.conf owner=root group=root mode=0644
+  register: gmond
+  when: ansible_distribution_version == "21.10" and inventory_hostname in groups.gmond
+  notify:
+    - restart gmond_ubuntu
+  tags:
+    - gmond
+    - gmond_config
+
+- name: Enable gmond on boot
+  service: name=ganglia-monitor enabled=yes
+  when: inventory_hostname in groups.gmond
+  tags:
+    - gmond
+
+- name: Enable gmond on boot
+  service: name=ganglia-monitor state=started enabled=yes
+  when: inventory_hostname != groups[group_names[0]][0] and inventory_hostname in groups.gmond
+  tags:
+    - gmond
+
+- name: Restart gmond
+  service:
+    name: ganglia-monitor
+    state: started
+    enabled: yes
+  when: inventory_hostname != groups[group_names[0]][0] and inventory_hostname in groups.gmond
+  tags:
+    - gmond
+    - gmond_restart

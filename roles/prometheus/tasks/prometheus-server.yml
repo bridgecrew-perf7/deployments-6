@@ -1,0 +1,39 @@
+---
+##########################################
+### Deploy Prometheus Server Container ###
+##########################################
+
+- name: Create Prometheus Docker Compose Directory
+  file:
+    path: "{{ prm_compose_dir }}"
+    state: directory
+    group: "root"
+    owner: "root"
+    mode: 0770
+  tags:
+    - prometheus
+
+- name: Create Prometheus Config File
+  template:
+    src: prometheus.yml.j2
+    dest: "{{ prm_config_dir }}prometheus.yml"
+    mode: 0640
+    owner: "root"
+    group: "root"
+  tags:
+    - prometheus
+
+- name: Create Prometheus Docker Compose File
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ prm_compose_file }}"
+    mode: 0640
+    owner: "root"
+    group: "root"
+  tags:
+    - prometheus
+
+- name: Start Prometheus Container
+  shell: cd {{ prm_compose_dir }} && docker-compose up -d
+  tags:
+    - prometheus

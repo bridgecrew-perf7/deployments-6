@@ -1,0 +1,42 @@
+global:
+  scrape_interval:     10s
+  evaluation_interval: 30s
+  scrape_timeout: 10s
+  external_labels:
+    cluster: prometheus-production
+    env: production
+
+scrape_configs:
+- job_name: prometheus
+  honor_labels: true
+  scheme: http
+  # basic_auth:
+  #   username: 'prometheus'
+  #   password: 'hT0DR1l4G4z2'
+  static_configs:
+  - targets: ['10.110.80.177:9190']
+  # tls_config:
+    # insecure_skip_verify: true
+
+- job_name: alertmanager
+  honor_labels: true
+  static_configs:
+  - targets: ['10.110.80.177:9093']
+
+# - job_name: 'production/node-exp'
+#   scrape_interval: 10s
+#   scrape_timeout: 10s
+#   file_sd_configs:
+#   - files:
+#     - 'production/node-exp/ghtklab/all/node.json'
+
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      - '127.0.0.1:9093'
+
+rule_files:
+  # - '/etc/prometheus/production/gmicro-igdata-exp/igdata/app/*rules.yaml'
+  - '/etc/prometheus/production/rules/*rules.yaml'
+

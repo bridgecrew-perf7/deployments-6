@@ -1,0 +1,58 @@
+---
+- name: Install the Kafka Broker Packages
+  yum:
+    name: "{{item}}{{confluent_package_redhat_suffix}}"
+    state: latest
+  loop: "{{kafka_packages}}"
+  when: ansible_os_family == "RedHat"
+
+- name: Install the Kafka Broker Packages
+  apt:
+    name: "{{item}}{{confluent_package_debian_suffix}}"
+  loop: "{{kafka_packages}}"
+  when: ansible_os_family == "Debian"
+
+- name: Kafka Broker group
+  group:
+    name: "{{kafka_group}}"
+
+- name: Kafka Broker user
+  user:
+    name: "{{kafka_user}}"
+    comment: "Kafka User"
+    system: true
+    group: "{{kafka_group}}"
+
+- name: Set Permissions on /data01/kafka
+  file:
+    path: /data01/kafka
+    owner: "{{kafka_user}}"
+    group: "{{kafka_group}}"
+    state: directory
+    mode: 0750
+
+- name: Set Permissions on Data Dirs
+  file:
+    path: "{{item}}"
+    owner: "{{kafka_user}}"
+    group: "{{kafka_group}}"
+    state: directory
+    mode: 0750
+  with_items: "{{kafka.datadir}}"
+
+- name: Set Permissions on Data Dir files
+  file:
+    path: "{{item}}"
+    owner: "{{kafka_user}}"
+    group: "{{kafka_group}}"
+    recurse: true
+  with_items: "{{kafka.datadir}}"
+
+- name: Tune virtual memory settings
+  sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+    sysctl_file: "{{ kafka_sysctl_file }}"
+  with_dict: "{{ kafka_sysctl }}"
+  notify: load sysctl

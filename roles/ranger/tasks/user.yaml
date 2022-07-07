@@ -1,0 +1,26 @@
+---
+- name: Create user on all machines
+  user:
+    name: "{{ranger_user}}"
+    comment: "ranger superuser"
+    group: "{{hadoop_group}}"
+    groups: sudo
+    home: "{{ ranger_user_home }}"
+    createhome: yes
+    shell: /bin/bash
+  register: created_user
+
+- name: update ~/.bashrc
+  template:
+    src: bashrc.j2
+    dest: "{{ ranger_user_home }}/.bashrc"
+  when: inventory_hostname in ranger_hosts
+
+- name: Allow ranger variables keeping for sudoers
+  template:
+    src: ranger_sudoers.j2
+    dest: /etc/sudoers.d/ranger
+    owner: root
+    group: root
+    mode: 0644
+  when: inventory_hostname in ranger_hosts

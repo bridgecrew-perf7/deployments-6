@@ -1,0 +1,84 @@
+---
+- name: Configure {{item}}
+  template:
+    src: "{{item}}.j2"
+    dest: "{{hbase_conf_dir}}/{{item}}"
+    owner: "{{hbase_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+  with_items:
+    - hbase-env.sh
+    - hbase-site.xml
+    - regionservers
+    - hbase-jmxetric-logging.properties
+    - hbase-master-jmxetric.xml
+    - hbase-regionserver-jmxetric.xml
+  tags:
+    - hbase-env
+  when: inventory_hostname in hbase_hosts
+
+- name: Set program variable to 'hbase-master'
+  set_fact:
+    program: "hbase-master"
+  when: inventory_hostname in hbase_hosts
+
+- name: Deploy systemd service for hbase-master
+  template:
+    src: hbase-master.service.j2
+    dest: /lib/systemd/system/hbase-master.service
+    owner: root
+    group: root
+    mode: 0644
+  when: inventory_hostname in hbase_hosts and inventory_hostname in groups.hbase_master_nodes
+
+- name: Reload systemd daemon
+  command: "systemctl daemon-reload"
+  tags:
+    - skip_ansible_lint
+  when: inventory_hostname in hbase_hosts and inventory_hostname in groups.hbase_master_nodes
+
+- name: Register hbase-master service
+  service:
+    name: hbase-master
+    enabled: yes
+  when: inventory_hostname in hbase_hosts and inventory_hostname in groups.hbase_master_nodes
+
+- name: Set program variable to 'hbase-regionserver'
+  set_fact:
+    program: "hbase-regionserver"
+  when: inventory_hostname in hbase_hosts
+
+- name: Deploy systemd service for hbase-regionserver
+  template:
+    src: hbase-regionserver.service.j2
+    dest: /lib/systemd/system/hbase-regionserver.service
+    owner: root
+    group: root
+    mode: 0644
+  when: inventory_hostname in hbase_hosts and inventory_hostname in groups.hbase_regionserver_nodes
+
+- name: Reload systemd daemon
+  command: "systemctl daemon-reload"
+  tags:
+    - skip_ansible_lint
+  when: inventory_hostname in hbase_hosts and inventory_hostname in groups.hbase_regionserver_nodes
+
+- name: Register hbase-regionserver service
+  service:
+    name: hbase-regionserver
+    enabled: yes
+  when: inventory_hostname in hbase_hosts and inventory_hostname in groups.hbase_regionserver_nodes
+
+- name: Restart hbase-master
+  service:
+    name: hbase-master
+    state: restarted
+    enabled: yes
+  when: inventory_hostname in hbase_hosts and inventory_hostname in groups.hbase_master_nodes
+
+- name: Restart hbase-regionserver
+  service:
+    name: hbase-regionserver
+    state: restarted
+    enabled: yes
+  when: inventory_hostname in hbase_hosts and inventory_hostname in groups.hbase_regionserver_nodes

@@ -1,0 +1,153 @@
+---
+- name: Create {{trino_install_dir}}
+  file:
+    path: "{{trino_install_dir}}"
+    state: directory
+    owner: "{{trino_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in trino_hosts
+
+- name: Create {{trino_conf_dir}}
+  file:
+    path: "{{trino_conf_dir}}"
+    state: directory
+    owner: "{{trino_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in trino_hosts
+
+- name: Create {{trino_conf_dir}}/catalog
+  file:
+    path: "{{trino_conf_dir}}/catalog"
+    state: directory
+    owner: "{{trino_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in trino_hosts
+
+- name: Create {{trino_data_dir}}
+  file:
+    path: "{{trino_data_dir}}"
+    state: directory
+    owner: "{{trino_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in trino_hosts
+
+- name: Download {{trino_server_file_name}} to {{datalandfill_root_dir}}
+  get_url:
+    url: "{{trino_server_url}}"
+    dest: "{{datalandfill_root_dir}}/{{trino_server_file_name}}"
+    validate_certs: no
+  when: inventory_hostname in trino_hosts
+
+- name: Unarchive downloaded Trino-server
+  unarchive:
+    src: "{{datalandfill_root_dir}}/{{trino_server_file_name}}"
+    dest: "{{trino_install_dir}}"
+    owner: "{{trino_user}}"
+    group: "{{hadoop_group}}"
+    remote_src: yes
+    mode: 0755
+    extra_opts: [--strip-components=1]
+  when: inventory_hostname in trino_hosts
+
+- name: Remove {{datalandfill_root_dir}}/{{trino_server_file_name}}
+  file:
+    path: "{{datalandfill_root_dir}}/{{trino_server_file_name}}"
+    state: absent
+  when: inventory_hostname in trino_hosts
+
+- name: Download Trino-cli.jar {{trino_install_dir}}
+  get_url:
+    url: "{{trino_client_url}}"
+    dest: "{{trino_install_dir}}/bin/trino-cli"
+    validate_certs: no
+  when: inventory_hostname in trino_hosts
+
+- name: Chmod 750 trino-cli
+  file:
+    path: "{{trino_install_dir}}/bin/trino-cli"
+    owner: "{{trino_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+  when: inventory_hostname in trino_hosts
+
+- name: Create folder /etc/trino
+  file:
+    path: /etc/trino
+    state: directory
+    owner: "{{trino_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in trino_hosts
+
+- name: Create trino link for conf to /etc/trino
+  file:
+    src: "{{trino_conf_dir}}"
+    dest: /etc/trino/conf
+    owner: "{{trino_user}}"
+    group: "{{hadoop_group}}"
+    state: link
+  when: inventory_hostname in trino_hosts
+
+# - name: Create link for {{item}} to /usr/local/bin
+#   file:
+#     src: "{{trino_bin_dir}}/{{item}}"
+#     dest: "/usr/local/bin/{{item}}"
+#     owner: "{{trino_user}}"
+#     group: "{{hadoop_group}}"
+#     mode: 0755
+#     state: link
+#   when: inventory_hostname in trino_hosts
+#   with_items:
+#     - trino-shell
+#     - trino-submit
+
+- name: Allow trino variables keeping for sudoers
+  template:
+    src: trino_sudoers.j2
+    dest: /etc/sudoers.d/trino
+    owner: root
+    group: root
+    mode: 0644
+  when: inventory_hostname in groups.trino_coordinator
+
+- name: Set program variable to 'trino-coordinator'
+  set_fact: program="trino-coordinator"
+  when: inventory_hostname in groups.trino_coordinator
+
+- name: Deploy systemd service for trino-coordinator
+  template:
+    src: trino.service.j2
+    dest: /lib/systemd/system/trino-coordinator.service
+    owner: root
+    group: root
+    mode: 0644
+  when: inventory_hostname in groups.trino_coordinator
+
+- name: Set program variable to 'trino-worker'
+  set_fact: program="trino-worker"
+  when: inventory_hostname in groups.trino_worker
+
+- name: Deploy systemd service for trino-worker
+  template:
+    src: trino.service.j2
+    dest: /lib/systemd/system/trino-worker.service
+    owner: root
+    group: root
+    mode: 0644
+  when: inventory_hostname in groups.trino_worker
+
+- name: Reload systemd daemon
+  command: "systemctl daemon-reload"
+  tags:
+    - skip_ansible_lint
+
+- name: Register datanode service
+  service:
+    name: trino-coordinator
+    enabled: yes
+  when: inventory_hostname in groups.trino_coordinator
+
+- name: Register datanode service
+  service:
+    name: trino-coordinator
+    enabled: yes
+  when: inventory_hostname in groups.trino_coordinator

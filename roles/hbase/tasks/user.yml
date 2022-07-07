@@ -1,0 +1,31 @@
+---
+
+- name: Add hadoop user on first namenode only and generate an ssh key
+  user:
+    name: "{{hbase_user}}"
+    comment: "Hadoop superuser"
+    group: "{{hadoop_group}}"
+    groups: sudo
+    createhome: yes
+    shell: /bin/bash
+    generate_ssh_key: "{{ hbase_ssh_fence }}"
+  when: inventory_hostname == groups['hbase_master_nodes'][0]
+
+- name: Create user on all machines
+  user:
+    name: "{{hbase_user}}"
+    comment: "Hadoop superuser"
+    group: "{{hadoop_group}}"
+    groups: sudo
+    home: "{{ hbase_user_home }}"
+    createhome: yes
+    shell: /bin/bash
+  register: created_user
+
+- name: update ~/.bashrc
+  template:
+    src: bashrc.j2
+    dest: "{{ hbase_user_home }}/.bashrc"
+
+- import_tasks: ssh_fence.yml
+  when: hadoop_ssh_fence and inventory_hostname in groups['hbase_nodes']

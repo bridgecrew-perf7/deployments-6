@@ -1,0 +1,42 @@
+---
+trino_hosts: "{{ groups.trino_nodes }}"
+trino_user: trino
+trino_setup_java: true
+trino_user_home: "/home/{{trino_user}}"
+trino_install_dir: "{{ datalandfill_root_dir }}/trino"
+trino_conf_dir: "{{trino_install_dir}}/etc"
+trino_bin_dir: "{{trino_install_dir}}/bin"
+trino_ranger_plugin_dir: "{{trino_install_dir}}/ranger-plugin"
+trino_jvm_maxmem: 4G
+trino_webserver_port: 8686
+trino_env: production
+trino_data_dir: "{{trino_install_dir}}/datadir"
+trino_data_inside_docker: "{{datalandfill_data_dir}}/trino"
+trino_java_version: jdk-11.0.13
+trino_java_home: "/usr/lib/jvm/{{trino_java_version}}"
+trino_repo_url: https://repo1.maven.org/maven2/io/trino
+trino_server_file_name: "trino-server-{{trino_version}}.tar.gz"
+trino_client_file_name: "trino-cli-{{trino_version}}-executable.jar"
+trino_server_url: "{{trino_repo_url}}/trino-server/{{trino_version}}/{{trino_server_file_name}}"
+trino_client_url: "{{trino_repo_url}}/trino-cli/{{trino_version}}/{{trino_client_file_name}}"
+
+trino_ranger_plugin: true
+trino_ranger_source_url: https://github.com/aakashnand/trino-ranger-demo/releases/download/trino-ranger-demo-v1.0
+trino_ranger_plugin_file: "ranger-{{ranger_version}}-trino-plugin.tar.gz"
+trino_ranger_download_url: "{{ranger_source_url}}/{{trino_ranger_plugin_file}}"
+trino_ranger_admin_url: "http://{{groups['ranger_admin'][0]}}:6080"
+trino_ranger_repo_name: trino
+trino_ranger_component_install_dir_name: "{{trino_install_dir}}"
+trino_ranger_xaaudit_elasticsearch_enable: true
+trino_ranger_xaaudit_elasticsearch_url: "{{haproxy_vip_host}}"
+trino_ranger_xaaudit_elasticsearch_user: "NONE"
+trino_ranger_xaaudit_elasticsearch_password: "NONE"
+trino_ranger_xaaudit_elasticsearch_index: ranger_audits
+trino_ranger_xaaudit_elasticsearch_port: "{{haproxy_es_ha_port}}"
+trino_ranger_xaaudit_elasticsearch_protocol: http
+trino_ranger_xaaudit_summary_enable: false
+
+trino_mysql_host: dev-datanode06
+trino_mysql_port: 3306
+trino_mysql_user: pt_osc
+trino_mysql_pass: Gh1MBjN9lhfWQl63N^*^

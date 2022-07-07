@@ -1,0 +1,125 @@
+---
+#################################################
+### Add Endpoint Metrics To Prometheus Server ###
+#################################################
+
+###### CREATE CONFIG ENDPOINTS DIRECTORY
+########################################
+- name: Create Production [node-exp] Endpoints Config Directory
+  file:
+    path: "{{ prm_config_dir }}production/{{ item }}"
+    state: directory 
+    recurse: yes 
+    owner: root
+    group: root
+  with_items:
+    - node-exp/ghtklab/all
+  tags:
+    - prometheus
+    - node-exp
+
+- name: Create Production [redis-exp] Endpoints Config Directory
+  file:
+    path: "{{ prm_config_dir }}production/{{ item }}"
+    state: directory 
+    recurse: yes 
+    owner: root
+    group: root
+  with_items:
+    - redis-exp/ghtklab/all
+  tags:
+    - prometheus
+    - redis-exp
+
+- name: Create Production [elasticsearch-exp] Endpoints Config Directory
+  file:
+    path: "{{ prm_config_dir }}production/{{ item }}"
+    state: directory 
+    recurse: yes 
+    owner: root
+    group: root
+  with_items:
+    - elasticsearch-exp/ghtklab/all
+  tags:
+    - prometheus
+    - elasticsearch-exp
+
+- name: Create Production rules Config Directory
+  file:
+    path: "{{ prm_config_dir }}production/{{ item }}"
+    state: directory 
+    recurse: yes 
+    owner: root
+    group: root
+  with_items:
+    - rules
+  tags:
+    - prometheus
+    - default
+
+
+###### UPDATE FILE CONFIG ENDPOINTS
+###################################
+
+- name: Update [node-exp] Endpoints
+  template: 
+    src: '{{ item.src }}'
+    dest: "{{ prm_config_dir }}{{ item.dir }}/{{ item.dest }}"
+    owner: root
+    group: root
+  with_items:
+    - {dir: production/node-exp/ghtklab/all, src: production/node-exp/ghtklab/all/node.json.j2, dest: node.json}
+  tags:
+    - prometheus
+    - node-exp
+
+- name: Update [redis-exp] Endpoints
+  template: 
+    src: '{{ item.src }}'
+    dest: "{{ prm_config_dir }}{{ item.dir }}/{{ item.dest }}"
+    owner: root
+    group: root
+  with_items:
+    - {dir: production/redis-exp/ghtklab/all, src: production/redis-exp/ghtklab/all/node.json.j2, dest: node.json}
+  tags:
+    - prometheus
+    - redis-exp
+
+- name: Update [elasticsearch-exp] Endpoints
+  template: 
+    src: '{{ item.src }}'
+    dest: "{{ prm_config_dir }}{{ item.dir }}/{{ item.dest }}"
+    owner: root
+    group: root
+  with_items:
+    - {dir: production/elasticsearch-exp/ghtklab/all, src: production/elasticsearch-exp/ghtklab/all/node.json.j2, dest: node.json}
+  tags:
+    - prometheus
+    - elasticsearch-exp
+
+###### UPDATE FILE RULE ENDPOINTS
+###################################
+
+# - name: Update [asterisk] Rules
+#   copy: 
+#     src: 'rules/asterisk-rules.yaml'
+#     dest: "{{ prm_config_dir }}production/rules/asterisk-rules.yaml"
+#     owner: root
+#     group: root
+#     force: "yes"
+#   tags:
+#     - prometheus
+#     - asterisk-exp
+#     - alertmanager
+
+
+###### RESTART PROMETHEUS WITH ENDPOINTS
+###################################
+- name: Restart Prometheus
+  shell: docker kill --signal="HUP" prometheus-server
+  tags:
+    - restart
+    - default
+    - node-exp
+    - redis-exp
+    - elasticsearch-exp

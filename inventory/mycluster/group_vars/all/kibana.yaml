@@ -1,0 +1,3 @@
+---
+kibana_install_dir: "{{ datalandfill_root_dir }}/kibana"
+kibana_conf_dir: "{{kibana_install_dir}}/conf"

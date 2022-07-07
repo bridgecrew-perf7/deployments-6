@@ -1,0 +1,60 @@
+version: "3.7"
+services:
+  superset:
+    env_file: app_env
+    image: quyetmv/superset:v1.5.0
+    container_name: superset_app
+    command: ["/app/docker/docker-bootstrap.sh", "app-gunicorn"]
+    user: "root"
+    restart: always
+    network_mode: host
+    volumes:
+      - /etc/hosts:/etc/hosts
+      - /etc/localtime:/etc/localtime
+      - {{superset_conf_dir}}:/app/pythonpath
+      - {{superset_conf_dir}}/config.py:/etc/superset/config.py
+      - {{superset_conf_dir}}/superset_config.py:/etc/superset/superset_config.py
+
+  superset-init:
+    image: quyetmv/superset:v1.5.0
+    container_name: superset_init
+    command: ["/app/docker/docker-init.sh"]
+    env_file: app_env
+    user: "root"
+    network_mode: host
+    volumes:
+      - /etc/hosts:/etc/hosts
+      - /etc/localtime:/etc/localtime
+      - {{superset_conf_dir}}:/app/pythonpath
+      - {{superset_conf_dir}}/config.py:/etc/superset/config.py
+      - {{superset_conf_dir}}/superset_config.py:/etc/superset/superset_config.py
+
+  superset-worker:
+    image: quyetmv/superset:v1.5.0
+    container_name: superset_worker
+    command: ["/app/docker/docker-bootstrap.sh", "worker"]
+    env_file: app_env
+    restart: always
+    user: "root"
+    network_mode: host
+    volumes:
+      - /etc/hosts:/etc/hosts
+      - /etc/localtime:/etc/localtime
+      - {{superset_conf_dir}}:/app/pythonpath
+      - {{superset_conf_dir}}/config.py:/etc/superset/config.py
+      - {{superset_conf_dir}}/superset_config.py:/etc/superset/superset_config.py
+
+  superset-worker-beat:
+    image: quyetmv/superset:v1.5.0
+    container_name: superset_worker_beat
+    command: ["/app/docker/docker-bootstrap.sh", "beat"]
+    env_file: app_env
+    restart: always
+    user: "root"
+    network_mode: host
+    volumes:
+      - /etc/hosts:/etc/hosts
+      - /etc/localtime:/etc/localtime
+      - {{superset_conf_dir}}:/app/pythonpath
+      - {{superset_conf_dir}}/config.py:/etc/superset/config.py
+      - {{superset_conf_dir}}/superset_config.py:/etc/superset/superset_config.py

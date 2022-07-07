@@ -1,0 +1,73 @@
+---
+# - import_tasks: user.yml
+#   tags:
+#     - hadoop_user
+#     - hadoop
+
+- import_tasks: base.yml
+  tags:
+    - hadoop_base
+    - hadoop
+
+- import_tasks: config.yml
+  tags:
+    - hadoop_base
+    - hadoop_config
+    - hadoop
+
+- import_tasks: datanode.yml
+  when: inventory_hostname in hadoop_datanodes
+  tags:
+    - hadoop_datanode
+    - hadoop
+
+- import_tasks: namenode.yml
+  when: inventory_hostname in hadoop_namenodes
+  tags:
+    - hadoop_namenode
+    - hadoop
+
+- import_tasks: secondarynamenode.yml
+  when: inventory_hostname in hadoop_secondary_namenode and not hadoop_ha_enabled
+
+- import_tasks: journalnode.yml
+  when: inventory_hostname in hadoop_journalnodes and hadoop_ha_enabled
+  tags:
+    - hadoop_journalnode
+    - hadoop
+
+- import_tasks: yarn.yml
+  when: hadoop_ha_enabled
+  tags:
+    - hadoop_yarn
+    - hadoop
+
+- import_tasks: bootstrap_spof.yml
+  when: hadoop_bootstrap and not hadoop_ha_enabled
+  tags: bootstrap
+
+- import_tasks: bootstrap_ha.yml
+  when: hadoop_ha_enabled
+  tags:
+    - hadoop_bootstrap
+    - hadoop
+
+- import_tasks: upgrade.yml
+  any_errors_fatal: True
+  when: hadoop_upgrade
+  tags:
+    - hadoop_upgrade
+
+- import_tasks: scripts.yml
+  tags:
+    - hadoop_scripts
+
+- import_tasks: decommission_node.yml
+  when: hadoop_decommission and hadoop_dfs_hosts_exclude is true
+  tags:
+    - hadoop_decommission
+
+- import_tasks: recommission_node.yml
+  when: hadoop_dfs_hosts_exclude is false
+  tags:
+    - hadoop_recommission

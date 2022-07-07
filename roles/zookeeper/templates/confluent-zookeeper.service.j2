@@ -1,0 +1,17 @@
+[Unit]
+Description=Apache Kafka - ZooKeeper
+Documentation=http://docs.confluent.io/
+After=network.target
+
+[Service]
+Type=simple
+User={{zookeeper_user}}
+Group={{zookeeper_group}}
+ExecStart=/usr/bin/zookeeper-server-start /etc/kafka/zookeeper.properties
+ExecStop=/usr/bin/zookeeper-server-stop /etc/kafka/zookeeper.properties
+TimeoutStopSec=180
+Restart=no
+Environment=JAVA_HOME={{datalandfill_java_home}}
+
+[Install]
+WantedBy=multi-user.target

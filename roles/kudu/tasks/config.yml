@@ -1,0 +1,112 @@
+---
+- name: Configure kudu-env.sh
+  template:
+    src: kudu-env.sh.j2
+    dest: "{{kudu_conf_dir}}/kudu-env.sh"
+    owner: "{{kudu_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+  tags:
+    - kudu-env
+  when: inventory_hostname in groups.kudu_nodes
+
+- name: Configure master.gflagfile.j2
+  template:
+    src: master.gflagfile.j2
+    dest: "{{kudu_conf_dir}}/master.gflagfile"
+    owner: "{{kudu_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+  when: inventory_hostname in groups.kudu_master_nodes
+
+- name: Configure tserver.gflagfile.j2
+  template:
+    src: tserver.gflagfile.j2
+    dest: "{{kudu_conf_dir}}/tserver.gflagfile"
+    owner: "{{kudu_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+  when: inventory_hostname in groups.kudu_tserver_nodes
+
+- name: Remove kudu config link
+  file:
+    path: /etc/kudu/conf
+    owner: "{{kudu_user}}"
+    group: "{{hadoop_group}}"
+    state: absent
+  when: inventory_hostname in groups.kudu_nodes
+
+- name: Create kudu link for conf to /etc/kudu
+  file:
+    src: "{{kudu_conf_dir}}"
+    dest: /etc/kudu/conf
+    owner: "{{kudu_user}}"
+    group: "{{hadoop_group}}"
+    state: link
+  when: inventory_hostname in groups.kudu_nodes
+
+- name: Set program variable to 'kudu-master'
+  set_fact:
+    program: "master"
+  when: inventory_hostname in groups.kudu_master_nodes
+
+- name: Deploy systemd service for kudu-master
+  template:
+    src: kudu.service.j2
+    dest: /lib/systemd/system/kudu-master.service
+    owner: root
+    group: root
+    mode: 0644
+  when: inventory_hostname in groups.kudu_master_nodes
+
+- name: Reload systemd daemon
+  command: "systemctl daemon-reload"
+  tags:
+    - skip_ansible_lint
+  when: inventory_hostname in groups.kudu_master_nodes
+
+- name: Register kudu-master service
+  service:
+    name: kudu-master
+    enabled: yes
+  when: inventory_hostname in groups.kudu_master_nodes
+
+- name: Set program variable to 'kudu-tserver'
+  set_fact:
+    program: "tserver"
+  when: inventory_hostname in groups.kudu_tserver_nodes
+
+- name: Deploy systemd service for kudu-tserver
+  template:
+    src: kudu.service.j2
+    dest: /lib/systemd/system/kudu-tserver.service
+    owner: root
+    group: root
+    mode: 0644
+  when: inventory_hostname in groups.kudu_tserver_nodes
+
+- name: Reload systemd daemon
+  command: "systemctl daemon-reload"
+  tags:
+    - skip_ansible_lint
+  when: inventory_hostname in groups.kudu_tserver_nodes
+
+- name: Register kudu-tserver service
+  service:
+    name: kudu-tserver
+    enabled: yes
+  when: inventory_hostname in groups.kudu_tserver_nodes
+
+- name: Restart kudu-tserver
+  service:
+    name: kudu-tserver
+    state: restarted
+    enabled: yes
+  when: inventory_hostname in groups.kudu_tserver_nodes
+  
+- name: Restart kudu-master
+  service:
+    name: kudu-master
+    state: restarted
+    enabled: yes
+  when: inventory_hostname in groups.kudu_master_nodes

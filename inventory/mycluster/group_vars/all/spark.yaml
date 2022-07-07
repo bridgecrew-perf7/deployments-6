@@ -1,0 +1,23 @@
+---
+## spark's configuration will define here.
+# Symlink for spark to the version you are installing
+spark_hosts: "{{ groups.spark_agents }}"
+spark_user_home: "/home/{{spark_user}}"
+spark_install_dir: "{{ datalandfill_root_dir }}/spark"
+spark_conf_dir: "{{spark_install_dir}}/conf"
+spark_bin_dir: "{{spark_install_dir}}/bin"
+spark_log_dir: /var/log/spark
+spark_tmp_dir: /tmp/spark
+spark_authenticate: True
+spark_user: spark
+spark_history_server: "{{groups.spark_history_server}}"
+# # Redistribute ssh keys every time?
+# spark_redistribute_ssh_keys: True
+# spark_ssh_fence: True
+# spark_ssh_known_hosts_file: "{{ spark_user_home }}/.ssh/known_hosts"
+spark_hadoop_version: hadoop3.2
+spark_download_url: "{{datalandfill_repo_url}}/spark/spark-{{spark_version}}/{{spark_filename}}"
+spark_filename: "spark-{{spark_version}}-bin-{{spark_hadoop_version}}.tgz"
+spark_shuffle_download_url: "{{datalandfill_repo_url}}/spark/spark-{{spark_version}}/{{spark_shuffle_jar_file_name}}"
+spark_shuffle_jar_file_name: spark-3.1.2-yarn-shuffle.jar
+spark_history_ui_port: 18080

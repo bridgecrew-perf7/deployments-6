@@ -1,0 +1,17 @@
+[Unit]
+# trino-service
+Description={{ program }}
+
+[Service]
+Type=forking
+User={{trino_user}}
+Group={{hadoop_group}}
+EnvironmentFile={{trino_conf_dir}}/trino-env.sh
+Restart=on-failure
+ExecStart={{ trino_bin_dir }}/launcher start
+ExecStop={{ trino_bin_dir }}/launcher stop
+ExecReload={{ trino_bin_dir }}/launcher restart
+PIDFile={{ trino_data_dir }}/var/run/launcher.pid
+
+[Install]
+WantedBy=multi-user.target

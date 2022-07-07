@@ -1,0 +1,71 @@
+---
+
+- name: Create ranger plugin tmp {{trino_ranger_plugin_dir}}
+  file:
+    path: "{{trino_ranger_plugin_dir}}"
+    state: directory
+    owner: "{{trino_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in trino_hosts
+
+- name: Download {{trino_ranger_plugin_file}} to {{datalandfill_root_dir}}
+  get_url:
+    url: "{{trino_ranger_download_url}}"
+    dest: "{{datalandfill_root_dir}}/{{trino_ranger_plugin_file}}"
+    validate_certs: no
+  when: inventory_hostname in trino_hosts
+
+- name: Unarchive downloaded Ranger-trino-plugin
+  unarchive:
+    src: "{{datalandfill_root_dir}}/{{trino_ranger_plugin_file}}"
+    dest: "{{trino_ranger_plugin_dir}}"
+    owner: "{{trino_user}}"
+    group: "{{hadoop_group}}"
+    remote_src: yes
+    mode: 0755
+    extra_opts: [--strip-components=1]
+  when: inventory_hostname in trino_hosts
+
+- name: Remove {{datalandfill_root_dir}}/{{trino_ranger_plugin_file}}
+  file:
+    path: "{{datalandfill_root_dir}}/{{trino_ranger_plugin_file}}"
+    state: absent
+  when: inventory_hostname in trino_hosts
+
+- name: Create folder /etc/ranger
+  file:
+    path: /etc/ranger
+    state: directory
+    owner: "{{trino_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in trino_hosts
+
+- name: Update install.properties
+  template:
+    src: install.properties
+    dest: "{{trino_ranger_plugin_dir}}/install.properties"
+  when: inventory_hostname in trino_hosts
+
+- name: Install Ranger trino plugin
+  shell: "{{trino_ranger_plugin_dir}}/enable-trino-plugin.sh"
+  args:
+    chdir: "{{trino_ranger_plugin_dir}}"
+  environment:
+      JAVA_HOME: "{{datalandfill_java_home}}"
+  when: inventory_hostname in trino_hosts
+
+- name: Restart trino-coordinator
+  service:
+    name: trino-coordinator
+    state: restarted
+    enabled: yes
+  when: inventory_hostname in groups.trino_coordinator
+
+- name: Restart trino-worker
+  service:
+    name: trino-worker
+    state: restarted
+    enabled: yes
+  when: inventory_hostname in groups.trino_worker
+
+- include_tasks: check-api.yaml

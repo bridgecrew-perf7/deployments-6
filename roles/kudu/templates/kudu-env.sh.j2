@@ -1,0 +1,8 @@
+export HADOOP_HOME={{hadoop_install_dir}}
+export KUDU_HOME={{kudu_install_dir}}
+export PATH=$KUDU_HOME/bin:$PATH
+export CLASSPATH=$CLASSPATH.:$HIVE_HOME/lib
+export KUDU_CONF_DIR={{kudu_conf_dir}}
+export JAVA_HOME={{datalandfill_java_home}}
+export PATH=$PATH:$JAVA_HOME/bin
+export KUDU_MANAGES_ZK=false

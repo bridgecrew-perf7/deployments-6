@@ -1,0 +1,36 @@
+---
+- name: Check if Java has already been downloaded and unpacked
+  stat:
+    path: "/usr/lib/jvm/{{datalandfill_java_version}}_linux-x64_bin.tar.gz"
+  register: dir
+
+- name: Download Java .tgz to /tmp
+  get_url:
+    url: "{{datalandfill_repo_url}}/jdk/{{trino_java_version}}_linux-x64_bin.tar.gz"
+    dest: "/tmp/{{trino_java_version}}_linux-x64_bin.tar.gz"
+    validate_certs: no
+
+- name: Create jvm
+  file:
+    path: /usr/lib/jvm
+    state: directory
+  when: not dir.stat.exists
+
+- name: Extract {{trino_java_version}}_linux-x64_bin.tar.gz into /usr/lib/jvm/
+  unarchive:
+    src: "/tmp/{{trino_java_version}}_linux-x64_bin.tar.gz"
+    dest: /usr/lib/jvm/
+    copy: no
+    owner: root
+    group: root
+  when: not dir.stat.exists
+
+- name: Install Java alternatives
+  alternatives:
+    name: java
+    link: /usr/bin/java
+    path: "/usr/lib/jvm/{{trino_java_version}}/bin/java"
+
+# - name: Set fact java_8_installed
+#   set_fact:
+#     java_8_installed: true

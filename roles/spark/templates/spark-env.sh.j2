@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+# export JAVA_TOOL_OPTS=-Djava.net.preferIPv4Stack=true
+export JAVA_HOME={{datalandfill_java_home}}
+export PATH=$PATH:$JAVA_HOME/bin
+export HADOOP_HOME={{hadoop_install_dir}}
+export HADOOP_CONF_DIR={{hadoop_conf_dir}}
+export HADOOP_LIBEXEC_DIR={{hadoop_install_dir}}/libexec
+export HADOOP_CLASSPATH=`/usr/local/bin/hadoop classpath`
+export SPARK_HOME={{spark_install_dir}}
+export LD_LIBRARY_PATH={{hadoop_install_dir}}/lib/native:$LD_LIBRARY_PATH

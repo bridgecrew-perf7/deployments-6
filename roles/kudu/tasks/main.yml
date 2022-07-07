@@ -1,0 +1,22 @@
+---
+# - import_tasks: user.yml
+#   tags:
+#     - kudu_user
+#     - kudu
+
+# - import_tasks: base.yml
+#   tags:
+#     - kudu_base
+#     - kudu
+
+- import_tasks: config.yml
+  tags:
+    - kudu_base
+    - kudu_config
+    - kudu
+
+- import_tasks: check-api.yaml
+  tags:
+    - kudu_base
+    - kudu_config
+    - kudu

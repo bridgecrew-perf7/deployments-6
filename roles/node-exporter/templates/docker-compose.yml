@@ -1,0 +1,19 @@
+---
+version: '3.8'
+services:
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node_exporter
+    command:
+      - '--path.rootfs=/host'
+    network_mode: host
+    pid: host
+    restart: always
+    volumes:
+      - '/:/host:ro,rslave'  
+    logging:
+        driver: "json-file"
+        options:
+            max-size: 10m
+            max-file: "5"
+            labels: node_exporter

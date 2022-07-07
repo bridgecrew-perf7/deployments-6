@@ -1,0 +1,6 @@
+---
+- hosts: redis_nodes
+  become: yes
+  remote_user: quyetmv
+  roles:
+    - { role: redis, tags: redis }

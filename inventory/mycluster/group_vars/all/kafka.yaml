@@ -1,0 +1,20 @@
+---
+## kafka's configuration will define here.
+kafka_service_name: confluent-kafka
+kafka_main_package: confluent-kafka-2.12
+kafka_packages:
+  - confluent-common
+  - confluent-rest-utils
+  - confluent-metadata-service
+  - "{{ kafka_main_package }}"
+  - confluent-rebalancer
+  - confluent-security
+kafka_user: cp-kafka
+kafka_group: confluent
+kafka:
+  execute_file: /usr/bin/kafka-server-start
+  config_file: /etc/kafka/server.properties
+  systemd_file: /lib/systemd/system/{{kafka_service_name}}.service
+  kafka_env_file: /etc/default/kafka
+  systemd_override: /etc/systemd/system/{{kafka_service_name}}.service
+  log4j_file: /etc/kafka/kafka_server_log4j.properties

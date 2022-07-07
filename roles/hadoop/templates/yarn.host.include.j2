@@ -1,0 +1,6 @@
+# This file contains a list of hosts that will be excluded from the DFS
+{% if hadoop_yarn_hosts_include is defined %}
+{% for host in groups.yarn_include %}
+{{ host }}
+{% endfor %}
+{% endif %}

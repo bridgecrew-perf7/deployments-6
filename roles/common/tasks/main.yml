@@ -1,0 +1,8 @@
+---
+- name: Install common
+  include_tasks: common.yml
+
+- name: Install Java 8
+  include_tasks: jdk-installation.yml
+  tags:
+    - java

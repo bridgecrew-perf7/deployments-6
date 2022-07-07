@@ -1,0 +1,27 @@
+---
+- name: Create Kafka Manager Config Directory
+  file:
+    path: "{{kafka_manager.config_path}}"
+    state: directory
+    group: "{{kafka_manager_group}}"
+    owner: "{{kafka_manager_user}}"
+    mode: 0770
+
+- name: Create Kafka Manager Config File
+  template:
+    src: application.conf.j2
+    dest: "{{kafka_manager.config_file}}"
+    mode: 0640
+    owner: "{{kafka_manager_user}}"
+    group: "{{kafka_manager_group}}"
+
+- name: Create Kafka Manager Compose File
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{kafka_manager.compose_file}}"
+    mode: 0640
+    owner: "{{kafka_manager_user}}"
+    group: "{{kafka_manager_group}}"
+
+- name: Start Kafka Manager
+  shell: cd {{kafka_manager.config_path}} && docker-compose up -d

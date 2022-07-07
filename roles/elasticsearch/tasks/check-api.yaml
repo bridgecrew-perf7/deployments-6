@@ -1,0 +1,17 @@
+---
+- name: Check status of elasticsearch
+  block:
+    - name: Check elasticsearch status
+      uri:
+        url: "http://127.0.0.1:9200"
+        method: GET
+        status_code: 200
+      register: module_status
+      until: module_status.status == 200
+      retries: 3
+      delay: 3
+  rescue:
+    - command: journalctl -xe -u elasticsearch
+      register: api_logs
+    - debug:
+        msg: "{{ api_logs.stderr_lines }}"

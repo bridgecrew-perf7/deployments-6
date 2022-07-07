@@ -1,0 +1,70 @@
+---
+# - name: Copy script start hive and metastore
+#   template:
+#     src: stop_start_hive.sh
+#     dest: "{{hive_bin_dir}}/stop_start_hive.sh"
+#     owner: "{{hive_user}}"
+#     group: "{{hadoop_group}}"
+#     mode: 0755
+#   when: inventory_hostname in hive_hosts
+
+- name: Set program variable to 'hive-metastore'
+  set_fact: program="metastore"
+
+- name: Deploy systemd service for hive-metastore.service
+  template:
+    src: hiveservice.service.j2
+    dest: /lib/systemd/system/hive-metastore.service
+    owner: root
+    group: root
+    mode: 0644
+  when: inventory_hostname in hive_hosts
+
+- name: Set program variable to 'hiveserver2'
+  set_fact: program="hiveserver2"
+
+- name: Deploy systemd service for hiveserver2.service
+  template:
+    src: hiveservice.service.j2
+    dest: /lib/systemd/system/hiveserver2.service
+    owner: root
+    group: root
+    mode: 0644
+  when: inventory_hostname in hive_hosts
+
+# daemon-reload cannot be sent to handler because it is needed before the end of play
+# also, we cannot use flush_handlers before the end of play, because we have other handlers
+- name: Reload systemd daemon
+  command: "systemctl daemon-reload"
+  tags:
+    - skip_ansible_lint
+  when: inventory_hostname in hive_hosts
+
+- name: Register hive-metastore service
+  service:
+    name: hive-metastore
+    enabled: yes
+  when: inventory_hostname in hive_hosts
+
+- name: Register hiveserver2 service
+  service:
+    name: hiveserver2
+    enabled: yes
+  when: inventory_hostname in hive_hosts
+
+- name: Configure {{item}}
+  template:
+    src: "{{item}}.j2"
+    dest: "{{hive_conf_dir}}/{{item}}"
+    owner: "{{hive_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+  with_items:
+    - hive-env.sh
+    - hive-site.xml
+    - log4j.properties
+    - hive-metastore-jmxetric.xml
+    - hive-server2-jmxetric.xml
+  when: inventory_hostname in hive_hosts
+  tags:
+    - hive-config

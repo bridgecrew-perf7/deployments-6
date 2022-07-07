@@ -1,0 +1,107 @@
+---
+- name: Make sure Python3 installed
+  apt:
+    name: python3
+  when: inventory_hostname in ranger_hosts
+
+- name: Download mysql-connector
+  copy:
+    src: mysql-connector-java-5.1.46-bin.jar
+    dest: /usr/share/java/mysql-connector-java-5.1.46-bin.jar
+  when: inventory_hostname in ranger_hosts
+
+- name: Create {{ranger_install_dir}}
+  file:
+    path: "{{ranger_install_dir}}"
+    state: directory
+    owner: "{{ranger_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in ranger_hosts
+
+- name: Download Ranger .tgz to {{datalandfill_root_dir}}
+  get_url:
+    url: "{{ranger_download_url}}"
+    dest: "{{datalandfill_root_dir}}/ranger-{{ranger_version}}-admin.tar.gz"
+    validate_certs: no
+  when: inventory_hostname in ranger_hosts and ranger_setup_init is true
+
+- name: Unarchive downloaded Ranger
+  unarchive:
+    src: "{{datalandfill_root_dir}}/ranger-{{ranger_version}}-admin.tar.gz"
+    dest: "{{ranger_install_dir}}"
+    owner: "{{ranger_user}}"
+    group: "{{hadoop_group}}"
+    remote_src: yes
+    mode: 0755
+    extra_opts: [--strip-components=1]
+  when: inventory_hostname in ranger_hosts and ranger_setup_init is true
+
+- name: Remove {{datalandfill_root_dir}}/ranger-{{ranger_version}}-admin.tar.gz
+  file:
+    path: "{{datalandfill_root_dir}}/ranger-{{ranger_version}}-admin.tar.gz"
+    state: absent
+  when: inventory_hostname in ranger_hosts and ranger_setup_init is true
+
+- name: Create folder /etc/ranger
+  file:
+    path: /etc/ranger
+    state: directory
+    owner: "{{ranger_user}}"
+    group: "{{ranger_group}}"
+  when: inventory_hostname in ranger_hosts 
+
+- name: Update install.properties
+  template:
+    src: install.properties
+    dest: "{{ranger_install_dir}}/install.properties"
+  when: inventory_hostname in ranger_hosts and ranger_setup_init is true
+
+- name: Setup Ranger
+  shell: "{{ranger_install_dir}}/setup.sh"
+  args:
+    chdir: "{{ranger_install_dir}}"
+  environment:
+      JAVA_HOME: "{{datalandfill_java_home}}"
+  when: inventory_hostname in ranger_hosts and ranger_setup_init is true
+
+- name: Configure ranger-env.sh
+  template:
+    src: ranger-env.sh.j2
+    dest: "{{ranger_install_dir}}/ranger-env.sh"
+    owner: "{{ranger_user}}"
+    group: "{{ranger_group}}"
+    mode: 0755
+  tags:
+    - ranger-env
+  when: inventory_hostname in ranger_hosts
+
+- name: Set program variable to 'ranger'
+  set_fact: program="ranger"
+  when: inventory_hostname in ranger_hosts
+
+- name: Deploy systemd service for ranger
+  template:
+    src: ranger.service.j2
+    dest: /lib/systemd/system/ranger.service
+    owner: root
+    group: root
+    mode: 0644
+  when: inventory_hostname in ranger_hosts
+
+- name: Reload systemd daemon
+  command: "systemctl daemon-reload"
+  tags:
+    - skip_ansible_lint
+
+- name: Register ranger service
+  service:
+    name: ranger
+    enabled: yes
+  when: inventory_hostname in ranger_hosts
+
+- name: Restart ranger
+  service:
+    name: ranger
+    state: restarted
+    enabled: yes
+  when: inventory_hostname in ranger_hosts

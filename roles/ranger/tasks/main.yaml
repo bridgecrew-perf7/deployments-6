@@ -1,0 +1,18 @@
+---
+- include: user.yaml
+  tags:
+    - ranger_user
+  when: inventory_hostname in groups.ranger_nodes
+
+- include: base.yaml
+  tags:
+    - ranger_base
+  when: inventory_hostname in groups.ranger_nodes
+
+- include: ranger-usersync.yaml
+  tags:
+    - ranger_usersync
+  when: inventory_hostname in groups.ranger_nodes
+
+- include: check-api.yaml
+  when: inventory_hostname in groups.ranger_nodes

@@ -1,0 +1,9 @@
+---
+- hosts: flink_nodes
+  become: yes
+  remote_user: quyetmv
+  gather_facts: yes
+  strategy: linear
+  roles:
+    # - {role: common, tags: ['common', 'java']}
+    - flink

@@ -1,0 +1,136 @@
+---
+## hive's configuration will define here.
+hive_hosts: "{{ groups.hive_nodes }}"
+hive_user_home: "/home/{{hive_user}}"
+hive_install_dir: "{{ datalandfill_root_dir }}/hive"
+hive_conf_dir: "{{hive_install_dir}}/conf"
+hive_bin_dir: "{{hive_install_dir}}/bin"
+hive_lib_dir: "{{hive_install_dir}}/lib"
+hive_log_dir: /var/log/hive
+hive_tmp_dir: /tmp/hive
+hive_hdfs_dir: /user/hive/warehouse
+hive_authenticate: True
+hive_user: hive
+
+hive_metastore_init: false
+hive_download_url: "{{datalandfill_repo_url}}/hive/hive-{{hive_version}}/apache-hive-{{hive_version}}-bin.tar.gz"
+hive_mysql_user: hive
+hive_mysql_pass: 1fjhY3CpKgeGppN4M^*^
+hive_mysql_host: "{{ hostvars[groups.mysql_nodes[0]]['ansible_host'] }}"
+hive_mysql_port: 3306
+hive_mysql_db: metastore
+hive_zookeeper_namespace: hive_metastore
+hive_thrift_ha_port: "{{haproxy_hive_thrift_ha_port}}"
+hive_thrift_ha_host: "{{haproxy_vip_host}}"
+
+hive_site_config: {}
+hive_site_config_defaults:
+  system:user.name: ${user.name}
+  javax.jdo.option.ConnectionURL: "jdbc:mysql://{{hive_mysql_host}}:{{hive_mysql_port}}/{{hive_mysql_db}}?useUnicode=true&amp;characterEncoding=UTF-8&amp;useSSL=false"
+  javax.jdo.option.ConnectionDriverName: com.mysql.jdbc.Driver
+  javax.jdo.option.ConnectionUserName: "{{hive_mysql_user}}"
+  javax.jdo.option.ConnectionPassword: "{{hive_mysql_pass}}"
+  hive.metastore.try.direct.sql.ddl: true
+  hive.metastore.try.direct.sql: true
+  datanucleus.schema.autoCreateAll: false
+  datanucleus.metadata.xml.validate: false
+  hive.metastore.schema.verification: true
+  datanucleus.autoStartMechanism: SchemaTable
+  hive.metastore.warehouse.dir: "{{hive_hdfs_dir}}"
+  hive.server2.thrift.bind.host: "{{inventory_hostname}}"
+  hive.server2.thrift.port: 10000
+  hive.warehouse.subdir.inherit.perms: true
+  hive.server2.logging.operation.enabled: true
+  hive.server2.logging.operation.log.location: /var/log/hive/operation_logs
+  mapred.reduce.tasks: -1
+  hive.exec.reducers.bytes.per.reducer: 67108864
+  hive.exec.copyfile.maxsize: 33554432
+  hive.exec.reducers.max: 1099
+  hive.metastore.execute.setugi: true
+  hive.support.concurrency: true
+  hive.zookeeper.quorum: "{{ groups['zookeeper_node'] | join(':' + (zookeeper_client_port | string) + ',')  }}:{{ zookeeper_client_port | string }}"
+  hive.zookeeper.client.port: "{{zookeeper_client_port}}"
+  hive.zookeeper.namespace: "{{hive_zookeeper_namespace}}"
+  hive.metastore.server.min.threads: 200
+  hive.metastore.server.max.threads: 100000
+  hive.cluster.delegation.token.store.class: org.apache.hadoop.hive.thrift.MemoryTokenStore
+  hive.metastore.fshandler.threads: 15
+  hive.metastore.transactional.event.listeners: org.apache.hive.hcatalog.listener.DbNotificationListener
+  hive.metastore.notifications.add.thrift.objects: false
+  hive.metastore.event.db.listener.timetolive: 172800s
+  hive.metastore.server.max.message.size: 1073741824
+  hive.service.metrics.file.location: /var/log/hive/metrics-hivemetastore/metrics.log
+  hive.metastore.metrics.enabled: true
+  hive.service.metrics.file.frequency: 30000
+  hive.metastore.uris: "thrift://{{hive_hosts[0]}}:9083,thrift://{{hive_hosts[1]}}:9083"
+  hive.metastore.client.socket.timeout: 1800
+  hive.log.explain.output: false
+  hive.auto.convert.join: true
+  hive.auto.convert.join.noconditionaltask.size: 20971520
+  hive.optimize.index.filter: true
+  hive.optimize.bucketmapjoin.sortedmerge: false
+  hive.smbjoin.cache.rows: 10000
+  hive.vectorized.groupby.checkinterval: 4096
+  hive.vectorized.groupby.flush.percent: 0.1
+  hive.compute.query.using.stats: false
+  hive.vectorized.execution.enabled: true
+  hive.vectorized.execution.reduce.enabled: true
+  hive.vectorized.use.vectorized.input.format: true
+  hive.vectorized.use.checked.expressions: true
+  hive.vectorized.use.vector.serde.deserialize: false
+  hive.vectorized.adaptor.usage.mode: chosen
+  hive.vectorized.input.format.excludes: org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat
+  hive.merge.mapfiles: true
+  hive.merge.mapredfiles: false
+  hive.cbo.enable: false
+  hive.fetch.task.conversion: minimal
+  hive.fetch.task.conversion.threshold: 268435456
+  hive.limit.pushdown.memory.usage: 0.1
+  hive.merge.hivefiles: true
+  hive.merge.smallfiles.avgsize: 16777216
+  hive.merge.size.per.task: 268435456
+  hive.optimize.reducededuplication: true
+  hive.optimize.reducededuplication.min.reducer: 4
+  hive.map.aggr: true
+  hive.map.aggr.hash.percentmemory: 0.5
+  hive.optimize.sort.dynamic.partition: false
+  hive.execution.engine: mr
+  hive.executor.memory: 6028014387b
+  hive.driver.memory: 11596411699b
+  hive.executor.cores: 6
+  hive.yarn.driver.memoryOverhead: 1228m
+  hive.yarn.executor.memoryOverhead: 1014m
+  hive.dynamicAllocation.enabled: true
+  hive.dynamicAllocation.initialExecutors: 1
+  hive.dynamicAllocation.minExecutors: 1
+  hive.dynamicAllocation.maxExecutors: 2147483647
+  hive.stats.fetch.column.stats: true
+  hive.mv.files.thread: 15
+  hive.blobstore.use.blobstore.as.scratchdir: false
+  hive.load.dynamic.partitions.thread: 15
+  hive.exec.input.listing.max.threads: 15
+  hive.msck.repair.batch.size: 0
+  hive.hive.dynamic.partition.pruning.map.join.only: false
+  hive.driver.parallel.compilation: false
+  hive.driver.parallel.compilation.global.limit: 3
+  hive.server2.thrift.min.worker.threads: 5
+  hive.server2.thrift.max.worker.threads: 100
+  hive.server2.enable.doAs: false
+  hive.server2.session.check.interval: 900000
+  hive.server2.idle.session.timeout: 43200000
+  hive.server2.idle.session.check.operation: true
+  hive.server2.idle.operation.timeout: 21600000
+  hive.server2.webui.host: 0.0.0.0
+  hive.server2.webui.port: 10002
+  hive.server2.webui.max.threads: 50
+  hive.server2.webui.use.ssl: false
+  hive.stats.collect.scancols: true
+  hive.shuffle.service.enabled: true
+  hive.security.authorization.enabled: false
+  hive.server2.metrics.enabled: true
+  hive.strict.checks.orderby.no.limit: false
+  hive.strict.checks.no.partition.filter: false
+  hive.strict.checks.type.safety: true
+  hive.strict.checks.cartesian.product: false
+  hive.strict.checks.bucketing: true
+  spark.sql.warehouse.dir: "{{hive_hdfs_dir}}"

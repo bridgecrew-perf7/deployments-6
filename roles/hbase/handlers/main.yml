@@ -1,0 +1,37 @@
+- name: Start hbase-master
+  service:
+    name: hbase-master
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: Stop hbase-master
+  service:
+    name: hbase-master
+    state: stopped
+    enabled: no
+
+- name: Restart hbase-master
+  service:
+    name: hbase-master
+    state: restarted
+    enabled: yes
+
+- name: Start hbase-regionserver
+  service:
+    name: hbase-regionserver
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: Stop hbase-regionserver
+  service:
+    name: hbase-regionserver
+    state: stopped
+    enabled: no
+
+- name: Restart hbase-regionserver
+  service:
+    name: hbase-regionserver
+    state: restarted
+    enabled: yes

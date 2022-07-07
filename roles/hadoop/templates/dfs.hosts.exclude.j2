@@ -1,0 +1,6 @@
+# This file contains a list of hosts that will be excluded from the DFS
+{% if hadoop_dfs_hosts_exclude is defined %}
+{% for host in groups.dfs_decommision_nodes %}
+{{ host }}
+{% endfor %}
+{% endif %}

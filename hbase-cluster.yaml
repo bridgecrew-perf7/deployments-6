@@ -1,0 +1,8 @@
+---
+- hosts: hbase_nodes,hadoop_master_node
+  become: yes
+  remote_user: quyetmv
+  gather_facts: yes
+  strategy: linear
+  roles:
+    - hbase

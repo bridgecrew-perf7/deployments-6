@@ -1,0 +1,35 @@
+---
+- import_tasks: decommission_node.yml
+  when: hadoop_decommission and hadoop_dfs_hosts_exclude is true
+  tags:
+    - hadoop_decommission
+
+- import_tasks: recommission_node.yml
+  when: hadoop_dfs_hosts_exclude is false
+  tags:
+    - hadoop_recommission
+
+- import_tasks: update_config_hadoop.yaml
+  when: inventory_hostname in groups.hadoop_cluster
+  tags:
+    - update_config_hadoop
+
+- import_tasks: update_config_hbase.yaml
+  when: inventory_hostname in groups.hbase_nodes
+  tags:
+    - update_config_hbase
+
+- import_tasks: update_config_hive.yaml
+  when: inventory_hostname in groups.hive_nodes
+  tags:
+    - update_config_hive
+
+- import_tasks: update_config_spark.yaml
+  when: inventory_hostname in groups.spark_nodes
+  tags:
+    - update_config_spark
+
+- import_tasks: update_config_trino.yaml
+  when: inventory_hostname in groups.trino_nodes
+  tags:
+    - update_config_trino

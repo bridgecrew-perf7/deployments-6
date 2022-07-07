@@ -1,0 +1,111 @@
+---
+- name: Harderning /sys/kernel/mm/transparent_hugepage/enabled with never value
+  shell: echo never > /sys/kernel/mm/transparent_hugepage/enabled
+
+- name: Add Redis repo
+  apt_repository:
+    repo: ppa:redislabs/redis
+    update_cache: yes
+
+- name: Ensure Redis install
+  apt: 
+    name: redis-server
+  ignore_errors: yes
+
+- name: Ensure Redis-sentinel install
+  apt: 
+    name: redis-sentinel
+  ignore_errors: yes
+
+- name: Ensure Redis-server is configured.
+  template:
+    src: redis.conf.j2
+    dest: "{{ redis_conf_path }}"
+    mode: 0644
+    owner: redis
+    group: redis
+
+- name: Ensure Redis Sentinel is configured.
+  template:
+    src: redis-sentinel.conf.j2
+    dest: "{{ redis_sentinel_conf_path }}"
+    mode: 0644
+    owner: redis
+    group: redis
+
+- name: Open 6379 port in iptables for redis server
+  iptables:
+    chain: INPUT
+    protocol: tcp
+    source: 10.0.0.0/8
+    destination_port: 6379
+    jump: ACCEPT
+    action: insert
+    comment: "ALLOW CONNECT TO REDIS SERVER "
+  become: yes
+
+- name: Open 26379 port in iptables for redis server
+  iptables:
+    chain: INPUT
+    protocol: tcp
+    source: 10.0.0.0/8
+    destination_port: 26379
+    jump: ACCEPT
+    action: insert
+    comment: "ALLOW CONNECT TO REDIS SERVER "
+  become: yes
+
+- name: Open 26379 port in iptables for redis server
+  iptables:
+    chain: OUTPUT
+    protocol: tcp
+    destination_port: 26379
+    jump: ACCEPT
+    action: insert
+    comment: "ALLOW CONNECT TO REDIS SERVER "
+  become: yes
+
+- name: Open 6379 port in iptables for redis server
+  iptables:
+    chain: OUTPUT
+    protocol: tcp
+    destination_port: 6379
+    jump: ACCEPT
+    action: insert
+    comment: "ALLOW CONNECT TO REDIS SERVER "
+  become: yes
+
+- name: Persisten iptables rule
+  shell: iptables-save > /etc/iptables/rules.v4
+  when:  ansible_os_family == "Debian"
+  ignore_errors: yes  
+
+- name: Add redis-server services
+  template: 
+    src: redis-server.service.j2 
+    dest: /lib/systemd/system/redis-server.service 
+    mode: 0755 
+    owner: root 
+    force: yes
+
+- name: Add redis-sentinel services
+  template: 
+    src: redis-sentinel.service.j2 
+    dest: /lib/systemd/system/redis-sentinel.service 
+    mode: 0755 
+    owner: root 
+    force: yes
+
+- name: Ensure redis is running and enabled on boot.
+  systemd: 
+    name: redis-server 
+    state: restarted 
+    enabled: yes 
+    daemon_reload: yes
+
+- name: Ensure redis sentinel is running and enabled on boot.
+  systemd: 
+    name: redis-sentinel 
+    state: restarted 
+    enabled: yes 
+    daemon_reload: yes

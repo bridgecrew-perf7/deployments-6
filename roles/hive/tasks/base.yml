@@ -1,0 +1,146 @@
+---
+- name: Make sure {{hive_install_dir}} existed
+  file:
+    path: "{{hive_install_dir}}"
+    state: directory
+    owner: "{{hive_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in hive_hosts
+
+- name: Download hive .tgz to {{datalandfill_root_dir}}
+  get_url:
+    url: "{{hive_download_url}}"
+    dest: "{{datalandfill_root_dir}}/apache-hive-{{hive_version}}-bin.tar.gz"
+    validate_certs: no
+  when: inventory_hostname in hive_hosts
+
+- name: Unarchive downloaded hive
+  unarchive:
+    src: "{{datalandfill_root_dir}}/apache-hive-{{hive_version}}-bin.tar.gz"
+    dest: "{{hive_install_dir}}"
+    owner: "{{hive_user}}"
+    group: "{{hadoop_group}}"
+    remote_src: yes
+    mode: 0755
+    extra_opts: [--strip-components=1]
+  when: inventory_hostname in hive_hosts
+
+- name: Remove {{datalandfill_root_dir}}/apache-hive-{{hive_version}}-bin.tar.gz
+  file:
+    path: "{{datalandfill_root_dir}}/apache-hive-{{hive_version}}-bin.tar.gz"
+    state: absent
+  when: inventory_hostname in hive_hosts
+
+- name: Create folder /etc/hive
+  file:
+    path: /etc/hive
+    state: directory
+    owner: "{{hive_user}}"
+    group: "{{hadoop_group}}"
+  when: inventory_hostname in hive_hosts
+
+- name: Create hive link for conf to /etc/hive
+  file:
+    src: "{{hive_conf_dir}}"
+    dest: /etc/hive/conf
+    owner: "{{hive_user}}"
+    group: "{{hadoop_group}}"
+    state: link
+  when: inventory_hostname in hive_hosts
+
+- name: Create link for {{item}} to /usr/local/bin
+  file:
+    src: "{{hive_bin_dir}}/{{item}}"
+    dest: "/usr/local/bin/{{item}}"
+    owner: root
+    group: root
+    mode: 0755
+    state: link
+  when: inventory_hostname in hive_hosts
+  with_items:
+    - hive
+    - hive-config.sh
+    - hiveserver2
+    - hplsql
+    - init-hive-dfs.sh
+    - metatool
+    - schematool
+    - beeline
+    - ext
+
+# - name: Export hive variables
+  # copy:
+  #   content: "export HIVE_HOME={{hive_install_dir}}\nexport PATH=$HIVE_HOME/bin:$PATH\nexport CLASSPATH=$CLASSPATH.:$HIVE_HOME/lib\nexport HIVE_CONF_DIR={{ hive_conf_dir }}\nexport JAVA_HOME={{datalandfill_java_home}}"
+  #   dest: "/etc/profile.d/hive_exports.sh"
+  #   mode: 0755
+  # when: inventory_hostname in hive_hosts
+
+- name: Allow hive variables keeping for sudoers
+  template:
+    src: hive_sudoers.j2
+    dest: /etc/sudoers.d/hive
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Create hive warehouse dir on hdfs
+  shell: 'su - {{hadoop_user}} -c "hdfs dfs -mkdir -p /user/{{hive_user}}/warehouse"'
+  when: inventory_hostname in hadoop_namenodes[0]
+
+- name: Change owner {{hive_user}} work dir on hdfs
+  shell: 'su - {{hadoop_user}} -c "hdfs dfs -chown -R {{hive_user}}:{{hadoop_group}} /user/{{hive_user}}"'
+  when: inventory_hostname in hadoop_namenodes[0]
+
+- name: Change mode {{hive_user}} work dir on hdfs
+  shell: 'su - {{hadoop_user}} -c "hdfs dfs -chmod -R 775 /user/{{hive_user}}"'
+  when: inventory_hostname in hadoop_namenodes[0]
+
+- name: Check {{hive_user}} work dir on hdfs
+  shell: 'su - {{hadoop_user}} -c "hdfs dfs -ls -h /user/{{hive_user}}"'
+  when: inventory_hostname in hadoop_namenodes[0]
+  register: hive_permission
+
+- name: print permission
+  debug: msg={{hive_permission.stdout}}
+  when: inventory_hostname in hadoop_namenodes[0]
+
+- name: Remove the existing guava file from the Hive lib directory
+  file:
+    path: "{{hive_lib_dir}}/guava-*.jar"
+    state: absent
+  when: inventory_hostname in hive_hosts
+
+- name: Copy the guava file from the Hadoop lib directory to the Hive lib directory
+  shell: "cp {{hadoop_install_dir}}/share/hadoop/hdfs/lib/guava-*.jar {{hive_lib_dir}}"
+  when: inventory_hostname in hive_hosts
+
+- name: Create hive tmp dir
+  file:
+    path: "{{hive_tmp_dir}}"
+    state: directory
+    owner: "{{hive_user}}"
+    group: "{{hadoop_group}}"
+    mode: 1777
+  tags:
+    - skip_ansible_lint
+
+- name: Create hive log dir
+  file:
+    path: "{{hive_log_dir}}"
+    state: directory
+    owner: "{{hive_user}}"
+    group: "{{hadoop_group}}"
+    mode: 0755
+
+- name: Download mysql-connector
+  copy:
+    src: mysql-connector-java-5.1.46-bin.jar
+    dest: /usr/share/java/mysql-connector-java-5.1.46-bin.jar
+  when: inventory_hostname in hive_hosts
+
+- name: Symlink mysql-connector-java-5.1.46-bin.jar to hive/lib
+  file:
+    src: /usr/share/java/mysql-connector-java-5.1.46-bin.jar
+    dest: "{{hive_lib_dir}}/mysql-connector-java-5.1.46-bin.jar"
+    state: link
+  when: inventory_hostname in hive_hosts

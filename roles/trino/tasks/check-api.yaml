@@ -1,0 +1,12 @@
+---
+- name: Check status of trino-coordinator
+  block:
+    - name: Check trino-coordinator status
+      uri:
+        url: "http://{{haproxy_vip_host}}:{{haproxy_trino_webserver_ha_port}}"
+        method: GET
+        status_code: 200
+      register: module_status
+      until: module_status.status == 200
+      retries: 3
+      delay: 3

@@ -1,0 +1,19 @@
+[Unit]
+Description=HDFS {{ program }}
+
+[Service]
+Type=forking
+User={{hadoop_user}}
+Group={{hadoop_group}}
+Type=simple
+Restart=on-failure
+TimeoutStartSec=2min
+TimeoutSec=300
+ExecStart={{ hadoop_bin_dir }}/hdfs --daemon start {{ program }}
+ExecStop={{ hadoop_bin_dir }}/hdfs --daemon stop {{ program }}
+
+# EnvironmentFile=/etc/profile.d/hadoop-env.sh
+PIDFile=/tmp/hadoop-hdfs-{{program}}.pid
+
+[Install]
+WantedBy=multi-user.target

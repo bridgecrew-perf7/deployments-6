@@ -1,0 +1,139 @@
+---
+############ HADOOP ###############
+- name: Force systemd to reread configs
+  systemd: daemon_reload=yes
+
+- name: Restart namenode
+  service: name=hdfs-namenode state=restarted
+  when:
+    - inventory_hostname in hadoop_namenodes
+    - hadoop_ansible_handlers|bool
+
+- name: Restart datanode
+  service: name=hdfs-datanode state=restarted
+  when:
+    - inventory_hostname in hadoop_datanodes
+    - hadoop_ansible_handlers|bool
+
+- name: Restart journalnode
+  service: name=hdfs-journalnode state=restarted
+  when:
+    - hadoop_ha_enabled
+    - inventory_hostname in hadoop_journalnodes
+    - hadoop_ansible_handlers|bool
+
+- name: Restart zkfc
+  service: name=hdfs-zkfc state=restarted
+  when:
+    - hadoop_ha_enabled
+    - inventory_hostname in hadoop_namenodes
+    - hadoop_ansible_handlers|bool
+
+- name: Restart yarn-nodemanager
+  service: name=yarn-nodemanager state=restarted
+  when:
+    - inventory_hostname in hadoop_nodemanagers
+    - hadoop_ansible_handlers|bool
+
+- name: Restart yarn-resourcemanager
+  service: name=yarn-resourcemanager state=restarted
+  when:
+    - inventory_hostname in hadoop_resourcemanagers
+    - hadoop_ansible_handlers|bool
+
+########## HBASE ################
+- name: Start hbase-master
+  service:
+    name: hbase-master
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: Stop hbase-master
+  service:
+    name: hbase-master
+    state: stopped
+    enabled: no
+
+- name: Restart hbase-master
+  service:
+    name: hbase-master
+    state: restarted
+    enabled: yes
+
+- name: Start hbase-regionserver
+  service:
+    name: hbase-regionserver
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: Stop hbase-regionserver
+  service:
+    name: hbase-regionserver
+    state: stopped
+    enabled: no
+
+- name: Restart hbase-regionserver
+  service:
+    name: hbase-regionserver
+    state: restarted
+    enabled: yes
+
+################ HIVE ################
+- name: Start hive-metastore
+  service:
+    name: hive-metastore
+    state: started
+    enabled: yes
+
+- name: Restart hive-metastore
+  service:
+    name: hive-metastore
+    state: restarted
+    enabled: yes
+
+- name: Start hiveserver2
+  service:
+    name: hiveserver2
+    state: started
+    enabled: yes
+
+- name: Stop hive-metastore
+  service:
+    name: hive-metastore
+    state: stopped
+    enabled: yes
+
+- name: Stop hiveserver2
+  service:
+    name: hiveserver2
+    state: stopped
+    enabled: yes
+
+- name: Restart hiveserver2
+  service:
+    name: hiveserver2
+    state: restarted
+    enabled: yes
+
+########### SPARK ##############
+- name: Start spark-history-server
+  service:
+    name: spark-history-server
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: Stop spark-history-server
+  service:
+    name: spark-history-server
+    state: stopped
+    enabled: no
+
+- name: Restart spark-history-server
+  service:
+    name: spark-history-server
+    state: restarted
+    enabled: yes
+

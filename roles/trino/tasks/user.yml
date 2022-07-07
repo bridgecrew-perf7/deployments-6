@@ -1,0 +1,17 @@
+---
+- name: Create user on all machines
+  user:
+    name: "{{trino_user}}"
+    comment: "trino superuser"
+    group: "{{hadoop_group}}"
+    groups: sudo
+    home: "{{ trino_user_home }}"
+    createhome: yes
+    shell: /bin/bash
+  register: created_user
+
+- name: update ~/.bashrc
+  template:
+    src: bashrc.j2
+    dest: "{{ trino_user_home }}/.bashrc"
+  when: inventory_hostname in trino_hosts

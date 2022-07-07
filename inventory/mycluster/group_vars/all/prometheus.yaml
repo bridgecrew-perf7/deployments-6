@@ -1,0 +1,13 @@
+prm_server_enabled: true
+prm_server: "10.110.80.177"
+prm_images_version: "latest"
+prm_compose_dir: "/root/docker-run/prometheus"
+prm_compose_file: "/root/docker-run/prometheus/docker-compose.yml"
+prm_user: "root"
+prm_group: "root"
+prm_home_dir: "/data/prometheus"
+prm_config_dir: "/data/prometheus/config/"
+prm_data_dir: "/data/prometheus/data"
+prm_rules_dir: "/data/prometheus/rules"
+prm_login_user: "prometheus"
+prm_login_pass: "$2y$10$IN2oe8ilEbeyrma6peqySOzVog0UXWcd7bdKDh.ZWrwdYuvljS1Xu"

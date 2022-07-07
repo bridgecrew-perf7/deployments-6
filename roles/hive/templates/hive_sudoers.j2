@@ -1,0 +1,6 @@
+# Keep environment variables so sudo users can sudo to hdfs user without worrying about environment variables
+{{ hive_user }} ALL=(ALL)       NOPASSWD: ALL
+Defaults  env_keep += "HIVE_HOME"
+Defaults  env_keep += "PATH"
+Defaults  env_keep += "CLASSPATH"
+Defaults  env_keep += "HIVE_CONF_DIR"

@@ -1,0 +1,68 @@
+---
+- name: Download Ranger .tgz to {{datalandfill_root_dir}}
+  get_url:
+    url: "{{ranger_usersync_download_url}}"
+    dest: "{{datalandfill_root_dir}}/ranger-{{ranger_version}}-usersync.tar.gz"
+    validate_certs: no
+  when: inventory_hostname in ranger_hosts and ranger_setup_init is true
+
+- name: Unarchive downloaded Ranger
+  unarchive:
+    src: "{{datalandfill_root_dir}}/ranger-{{ranger_version}}-usersync.tar.gz"
+    dest: "{{ranger_install_dir}}"
+    owner: "{{ranger_user}}"
+    group: "{{hadoop_group}}"
+    remote_src: yes
+    mode: 0755
+  when: inventory_hostname in ranger_hosts and ranger_setup_init is true
+
+- name: Remove {{datalandfill_root_dir}}/ranger-{{ranger_version}}-usersync.tar.gz
+  file:
+    path: "{{datalandfill_root_dir}}/ranger-{{ranger_version}}-usersync.tar.gz"
+    state: absent
+  when: inventory_hostname in ranger_hosts and ranger_setup_init is true
+
+- name: Update install.properties
+  template:
+    src: ranger-usersync/install.properties
+    dest: "{{ranger_install_dir}}/ranger-{{ranger_version}}-usersync/install.properties"
+  when: inventory_hostname in ranger_hosts and ranger_setup_init is true
+
+- name: Setup Ranger
+  shell: "{{ranger_install_dir}}/ranger-{{ranger_version}}-usersync/setup.sh"
+  args:
+    chdir: "{{ranger_install_dir}}/ranger-{{ranger_version}}-usersync"
+  environment:
+      JAVA_HOME: "{{datalandfill_java_home}}"
+  when: inventory_hostname in ranger_hosts and ranger_setup_init is true
+
+- name: Set program variable to 'ranger-usersync'
+  set_fact: program="ranger-usersync"
+  when: inventory_hostname in ranger_hosts
+
+- name: Deploy systemd service for ranger-usersync
+  template:
+    src: ranger-usersync/ranger-usersync.service.j2
+    dest: /lib/systemd/system/ranger-usersync.service
+    owner: root
+    group: root
+    mode: 0644
+  when: inventory_hostname in ranger_hosts
+
+- name: Reload systemd daemon
+  command: "systemctl daemon-reload"
+  tags:
+    - skip_ansible_lint
+
+- name: Register ranger-usersync service
+  service:
+    name: ranger-usersync
+    enabled: yes
+  when: inventory_hostname in ranger_hosts
+
+- name: Restart ranger
+  service:
+    name: ranger-usersync
+    state: restarted
+    enabled: yes
+  when: inventory_hostname in ranger_hosts

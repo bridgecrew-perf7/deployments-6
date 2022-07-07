@@ -1,0 +1,9 @@
+---
+- hosts: hadoop_cluster
+  become: yes
+  remote_user: quyetmv
+  gather_facts: yes
+  strategy: linear
+  roles:
+    # - {role: common, tags: ['common', 'java']}
+    - hadoop

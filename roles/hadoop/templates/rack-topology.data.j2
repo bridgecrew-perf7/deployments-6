@@ -1,0 +1,4 @@
+{% for host in groups.hadoop_cluster -%}
+{{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['rack'] }}
+{{ hostvars[host]['ansible_host'] }} {{ hostvars[host]['rack'] }}
+{% endfor -%}

@@ -1,0 +1,10 @@
+---
+kafka_manager:
+  config_path: /data01/kafka-manager
+  config_file: /data01/kafka-manager/application.conf
+  compose_file: /data01/kafka-manager/docker-compose.yml
+  secret_key: y1HiclUd^Lw4zCIRB3m25e@$DQ.ZW9OS
+  username: admin
+  password: Ghtk@2021
+kafka_manager_group: root
+kafka_manager_user: root

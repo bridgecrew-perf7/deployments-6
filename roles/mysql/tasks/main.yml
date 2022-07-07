@@ -1,0 +1,31 @@
+---
+- name: Create data directory
+  file:
+    path: "{{ mysql_data_dir }}"
+    state: directory
+  tags:
+    - mysql
+
+- include: installation.yml
+  tags:
+    - mysql
+    - mysql_install
+  when: inventory_hostname in groups.mysql_nodes
+
+- include: add-user.yml
+  tags:
+    - mysql
+    - mysql_add_user
+  when: inventory_hostname in groups.mysql_nodes
+
+- include: remove-user.yml
+  tags:
+    - mysql
+    - mysql_remove_user
+  when: inventory_hostname in groups.mysql_nodes
+
+- include: replicate.yaml
+  tags:
+    - mysql
+    - mysql_replicate
+  when: inventory_hostname in groups.mysql_nodes

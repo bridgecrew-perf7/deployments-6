@@ -1,0 +1,9 @@
+# Maintained by Ansible
+dataDir={% for datadir in zookeeper.dataDir%}{% if loop.index > 1%}{% endif %}{{ datadir }}{% endfor %}
+
+{% for key, value in zookeeper.properties.items() %}
+{{key}}={{value}}
+{% endfor %}
+{% for host in groups['zookeeper_node'] %}
+server.{{ hostvars[host]['zookeeper_id'] | default(groups.zookeeper_node.index(host) + 1)}}={{ hostvars[host]['ansible_host'] }}:{{zookeeper_peer_port}}:{{zookeeper_leader_port}}
+{% endfor %}

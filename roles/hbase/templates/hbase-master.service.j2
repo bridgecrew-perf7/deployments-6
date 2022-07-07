@@ -1,0 +1,17 @@
+[Unit]
+Description=HBase Master
+Wants=network-online.target
+After=network-online.target hdfs-namenode.service
+
+[Service]
+Type=forking
+User={{hbase_user}}
+Group={{hadoop_group}}
+Type=simple
+Restart=on-failure
+TimeoutStartSec=2min
+TimeoutSec=300
+ExecStart={{ hbase_bin_dir }}/hbase --config {{ hbase_conf_dir }} master start
+
+[Install]
+WantedBy=multi-user.target
